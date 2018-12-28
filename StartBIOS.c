@@ -25,37 +25,50 @@
 
 /* Driverlib headers */
 #include <driverlib/gpio.h>
+#include <driverlib/sysctl.h>
+#include <driverlib/pin_map.h>
+#include <driverlib/i2c.h>
 
 /* Board Header files */
 #include <Board.h>
 #include <EK_TM4C1294XL.h>
+#include <HR4_Task.h>
 
 /* Application headers */
-#include <Blink_Task.h>
 #include <UART_Task.h>
 
 int main(void)
 {
     uint32_t ui32SysClock;
-    static struct led_descriptor led_desc[2];
+
     /* Call board init functions. */
     ui32SysClock = Board_initGeneral(120*1000*1000);
     (void)ui32SysClock; // We don't really need this (yet)
 
-    led_desc[0].port_base = GPIO_PORTN_BASE;
-    led_desc[0].led = GPIO_PIN_1;
-    /* Initialize+start Blink Task*/
-    (void)setup_Blink_Task(&led_desc[0], 500);
-    /* System_printf() is VERY slow!*/
-    System_printf("Created Blink Task1\n");
-    System_flush();
+    Board_initI2C();
 
-    led_desc[1].port_base = GPIO_PORTF_BASE;
-    led_desc[1].led = GPIO_PIN_0;
-    /*Initialize+start Blink Task*/
-    (void)setup_Blink_Task(&led_desc[1], 250);
-    System_printf("Created Blink Task2\n");
-    System_flush();
+
+    /* Init I²C */
+
+    //SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+
+
+    /*SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C8);
+    GPIOPinConfigure(GPIO_PA2_I2C8SCL);
+    GPIOPinConfigure(GPIO_PA3_I2C8SDA);
+    GPIOPinTypeI2CSCL(GPIO_PORTA_BASE, GPIO_PIN_2);
+    GPIOPinTypeI2C(GPIO_PORTA_BASE, GPIO_PIN_3);
+    see EK_TM4C1294XL.c*/
+
+
+    //I2CMasterInitExpClk(I2C8_BASE, ui32SysClock, false);
+    //I2CMasterEnable(I2C8_BASE);
+
+    setup_HeartRate_Task((UArg) 0, (UArg) 0);
+
+
+
+
 
     /*Initialize+start UART Task*/
     (void)setup_UART_Task();
