@@ -32,6 +32,34 @@
 /* Application headers */
 #include "font.h"
 #include "UART_Task.h"
+#include "OLED_defines.h"
+#include "OLED_Task.h"
 
 
+void oled_command(){
 
+}
+
+void oled_data(){
+
+}
+
+void init_oled(){
+
+}
+
+void DDRAM_access(){
+
+}
+
+void oled_MemorySize(){
+
+}
+
+void oled_Background(){
+
+}
+
+void spi_write(){
+
+}
