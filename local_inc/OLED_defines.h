@@ -1,14 +1,19 @@
 /*
- * helper for OLED_C
+ * helper for OLED_C SEPS114A rev 1.0
  */
 
 
 #ifndef OLED_DEFINES_H_
 #define OLED_DEFINES_H_
 
-#define SEPS114A_SOFT_RESET 0x01
-#define SEPS114A_DISPLAY_ON_OFF 0x02
-#define SEPS114A_ANALOG_CONTROL 0x0F    //
+#define Display_Soft_Reset_LOW 0x00
+#define Display_Soft_Reset_HIGH 0xFF
+#define RST_PIN GPIO_PIN_7
+
+
+#define SOFT_RESET 0x01
+#define DISPLAY_ON_OFF 0x02
+#define ANALOG_CONTROL 0x0F
 #define SEPS114A_STANDBY_ON_OFF 0x14
 #define SEPS114A_OSC_ADJUST 0x1A
 #define SEPS114A_ROW_SCAN_DIRECTION 0x09

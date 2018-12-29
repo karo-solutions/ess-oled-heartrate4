@@ -46,6 +46,21 @@ void oled_data(){
 
 void init_oled(){
 
+    GPIOPinWrite(GPIO_PORTC_BASE, RST_PIN, Display_Soft_Reset_LOW);
+    Task_sleep(10);
+    GPIOPinWrite(GPIO_PORTC_BASE, RST_PIN, Display_Soft_Reset_HIGH);
+    Task_sleep(10);
+
+    //soft reset
+    oled_command()
+
+
+
+
+
+
+
+
 }
 
 void DDRAM_access(){
