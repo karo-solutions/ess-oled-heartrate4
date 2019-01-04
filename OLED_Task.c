@@ -35,16 +35,29 @@
 #include "OLED_defines.h"
 #include "OLED_Task.h"
 
+void oled_command()
+{
+    //select index addres
+    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0);
+    GPIOPinWrite(GPIO_PORTM_BASE, PWM_PIN, 0);
 
-void oled_command(){
+    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0xFF);
+
+    //write to reg
+    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0);
+    GPIOPinWrite(GPIO_PORTM_BASE, PWM_PIN, 0xFF);
+
+    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0xFF);
 
 }
 
-void oled_data(){
+void oled_data()
+{
 
 }
 
-void init_oled(){
+void init_oled()
+{
 
     GPIOPinWrite(GPIO_PORTC_BASE, RST_PIN, Display_Soft_Reset_LOW);
     Task_sleep(10);
@@ -111,18 +124,22 @@ void init_oled(){
     oled_command(DISPLAY_ON_OFF, 0x01);
 }
 
-void DDRAM_access(){
+void DDRAM_access()
+{
 
 }
 
-void oled_MemorySize(){
+void oled_MemorySize()
+{
 
 }
 
-void oled_Background(){
+void oled_Background()
+{
 
 }
 
-void spi_write(){
+void spi_write()
+{
 
 }

@@ -9,6 +9,8 @@
 #define Display_Soft_Reset_LOW 0x00
 #define Display_Soft_Reset_HIGH 0xFF
 #define RST_PIN GPIO_PIN_7
+#define CS_PIN GPIO_PIN_2
+#define PWM_PIN GPIO_PIN_3
 
 
 #define SOFT_RESET 0x01
