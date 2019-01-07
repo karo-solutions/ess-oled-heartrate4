@@ -40,19 +40,23 @@ void oled_command()
     //select index addres
     GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0);
     GPIOPinWrite(GPIO_PORTM_BASE, PWM_PIN, 0);
-
+    spi_write();
     GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0xFF);
 
     //write to reg
     GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0);
     GPIOPinWrite(GPIO_PORTM_BASE, PWM_PIN, 0xFF);
-
+    spi_write();
     GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0xFF);
 
 }
 
 void oled_data()
 {
+    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0);
+    GPIOPinWrite(GPIO_PORTM_BASE, PWM_PIN, 0xFF);
+    spi_write();
+    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0xFF);
 
 }
 
@@ -126,6 +130,10 @@ void init_oled()
 
 void DDRAM_access()
 {
+    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0);
+    GPIOPinWrite(GPIO_PORTM_BASE, PWM_PIN, 0);
+    spi_write();
+    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0xFF);
 
 }
 
