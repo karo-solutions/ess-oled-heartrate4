@@ -16,6 +16,7 @@
 #include <ti/sysbios/BIOS.h>
 #include <ti/sysbios/knl/Task.h>
 
+
 /* Currently unused RTOS headers that are needed
  * for advanced features like IPC. */
 #include <ti/sysbios/knl/Semaphore.h>
@@ -46,19 +47,9 @@ int main(void)
     (void)ui32SysClock; // We don't really need this (yet)
 
     Board_initI2C();
+    Board_initGPIO();
 
 
-    /* Init I²C */
-
-    //SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-
-
-    /*SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C8);
-    GPIOPinConfigure(GPIO_PA2_I2C8SCL);
-    GPIOPinConfigure(GPIO_PA3_I2C8SDA);
-    GPIOPinTypeI2CSCL(GPIO_PORTA_BASE, GPIO_PIN_2);
-    GPIOPinTypeI2C(GPIO_PORTA_BASE, GPIO_PIN_3);
-    see EK_TM4C1294XL.c*/
 
 
     //I2CMasterInitExpClk(I2C8_BASE, ui32SysClock, false);
