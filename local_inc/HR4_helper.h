@@ -14,6 +14,10 @@
 #define TEMP_EN 0x21
 #define LED1_PA 0x0C
 #define MODE 0x09
+#define MODE_MASK 0xF8
+#define MODE_HR 0x02
+#define MODE_SPO2 0x03
+#define MODE_MULTILED 0x07
 #define RESET 0x40
 #define RESET_MASK 0xBF
 #define FIFO_CONF 0x08

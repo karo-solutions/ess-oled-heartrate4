@@ -1,11 +1,9 @@
-/*! \file Blink_Task.h
-    \brief Blink task
-    \author Matthias Wenzl
-    \author Michael Kramer
-
-    Blinking LED Task example.
-
-*/
+/*
+ * HR4_Task.h
+ *
+ *  Created on: Jan 9, 2019
+ *      Author: Robert
+ */
 
 #ifndef HR4_TASK_H_
 #define HR4_TASK_H_

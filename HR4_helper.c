@@ -199,39 +199,27 @@ int getTemp()
     //System_printf("Calculated Temperature: %d.%d \n", ret_tint, frac);
     System_flush();
 
-    //WAIT FOR INTERRUPT
-    //SEE IF TEMP INTERRUPT
-    //READ
-
-    /* i2c.readCount = 1;
-     i2c.writeCount = 1;
-     writeBuffer[0] = TINT;
-     if (!I2C_transfer(handle, &i2c))
-     System_abort("Unsuccessful I2C transfer!");
-
-     ret_tint = readBuffer[0];
-
-     i2c.readCount = 1;
-     i2c.writeCount = 1;
-     writeBuffer[0] = TFRAC;
-     if (!I2C_transfer(handle, &i2c))
-     System_abort("Unsuccessful I2C transfer!");
-
-     ret_tfrac = readBuffer[0];
-     frac = (ret_tfrac * 625);
-
-
-     //((float)ret_tint + ((float)ret_tfrac * 0.0625)) <- printf does not like floats :(
-
-     //System_printf("Output\nTINT: %d \nTFRAC: %d\nCalculated Temperature: %d.%d \n",ret_tint,ret_tfrac,ret_tint,frac);
-     System_printf("Calculated Temperature: %d.%d \n",ret_tint,frac);
-     System_flush();*/
-
     return 0;
 }
 
 void getHeartRate()
 {
+    bitSet(MODE, MODE_MASK, MODE_HR);
+
+
+    Task_sleep(10);
+    i2c.readCount = 1;
+    i2c.writeCount = 1;
+    writeBuffer[0] = MODE;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+
+    uint8_t response = readBuffer[0];
+    System_printf("MODE SET: %x\n", response);
+    System_flush();
+
+
+
     writeBuffer[0] = LED1_PA;
     writeBuffer[1] = 0xFF;
 
@@ -262,6 +250,9 @@ void Isr()
 {
     System_printf("ISR TRIGGERED\n");
     System_flush();
+
+    //TODO check which Interrupt got triggered
+    //... cannot read I2C here :( need function which waits for every interrupt...
     Event_post(interruptEvent, Event_Id_00);
 
 }

@@ -1,6 +1,8 @@
 /*
- *  ======== Blink_Task.c ========
- *  Author: Michael Kramer / Matthias Wenzl
+ * HR4_Task.c
+ *
+ *  Created on: Jan 9, 2019
+ *      Author: Robert
  */
 #include <stdbool.h>
 #include <stdint.h>
@@ -44,9 +46,9 @@ void HeartRateFxn(UArg arg0, UArg arg1){
     HR4_setup();
 
     while(1){
-        getTemp();
+        //getTemp();
         Task_sleep(1000);
-        //getHeartRate();
+        getHeartRate();
     }
 
 
