@@ -74,8 +74,38 @@ void HR4_setup()
     /* Enable interrupts */
     GPIO_enableInt(Board_PD4);
 
-    //Enable DIE_TEMP_RDY interrupt
-    bitSet(INT_ENABLE2, INT_DIE_TEMP_RDY_EN_MASK, INT_DIE_TEMP_RDY_EN);
+    //Enable DIE_TEMP_RDY Interrupt
+    //bitSet(INT_ENABLE2, INT_DIE_TEMP_RDY_EN_MASK, INT_DIE_TEMP_RDY_EN);
+    //Enable A_FULL Interrupt
+    //bitSet(INT_ENABLE1, INT_A_FULL_MASK, INT_A_FULL);
+    //FIFO SMP_AVE
+    bitSet(FIFO_CONF, SMP_AVG_MASK, SMP_AVG);
+    // FIFO Almost Full Value 30
+    //bitSet(FIFO_CONF, FIFO_A_FULL_MASK, FIFO_A_FULL);
+    bitSet(FIFO_CONF, FIFO_ROLLOVER_EN_MASK, FIFO_ROLLOVER_EN);
+    //setting prox_int_en
+    bitSet(INT_ENABLE1, INT_PROX_EN_MASK, INT_PROX_EN);
+    //MODE_HR
+    bitSet(MODE, MODE_MASK, MODE_HR);
+    //SPO2 Sample Rate
+    bitSet(SPO2_CONF_REG, SPO2_SR_MASK, SPO2_SR);
+    //setting new fifo data int
+    bitSet(INT_ENABLE1, INT_PPG_RDY_MASK, INT_PPG_RDY);
+
+    //RED
+    bitSet(LED1_PA,0,0x1F);
+    //IR
+    bitSet(LED2_PA,0,0x1F);
+    //GREEN
+    bitSet(LED3_PA,0,0x1F);
+    //PROXIMITY_LED
+    bitSet(PILOT_PA,0,0x0F);
+
+    //PROX THRESHOLD
+    bitSet(PROX_INT_THRESH,0,0x1F);
+
+
+
 
     i2c.readCount = 1;
     i2c.writeCount = 1;
@@ -112,7 +142,7 @@ void HR4_setup()
 
     i2c.readCount = 1;
     i2c.writeCount = 1;
-    writeBuffer[0] = INT_STATUS1;
+    writeBuffer[0] = INT_STATUS2;
     if (!I2C_transfer(handle, &i2c))
         System_abort("Unsuccessful I2C transfer!");
 
@@ -204,33 +234,36 @@ int getTemp()
 
 void getHeartRate()
 {
-    bitSet(MODE, MODE_MASK, MODE_HR);
+
+    clearFIFO();
+
+    //resetting prox_int_en
+    //bitSet(INT_ENABLE1, INT_PROX_EN_MASK, INT_PROX_EN);
 
 
-    Task_sleep(10);
+    Event_pend(interruptEvent, Event_Id_NONE, Event_Id_00, BIOS_WAIT_FOREVER);
+
     i2c.readCount = 1;
     i2c.writeCount = 1;
-    writeBuffer[0] = MODE;
+    writeBuffer[0] = INT_STATUS1;
     if (!I2C_transfer(handle, &i2c))
         System_abort("Unsuccessful I2C transfer!");
 
-    uint8_t response = readBuffer[0];
-    System_printf("MODE SET: %x\n", response);
+    System_printf("INTERRUPT --- INT_STATUS1: %x\n",readBuffer[0]);
+    System_flush();
+
+    i2c.readCount = 1;
+    i2c.writeCount = 1;
+    writeBuffer[0] = INT_STATUS2;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+
+    System_printf("INTERRUPT --- INT_STATUS2: %x\n",readBuffer[0]);
     System_flush();
 
 
 
-    writeBuffer[0] = LED1_PA;
-    writeBuffer[1] = 0xFF;
-
-    i2c.writeCount = 2;
-    i2c.readCount = 0;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-
-    System_printf("RED ON\n");
-    System_flush();
-
+    /*
     Task_sleep(5000);
 
     writeBuffer[0] = LED1_PA;
@@ -244,6 +277,35 @@ void getHeartRate()
     System_printf("RED OFF\n");
     System_flush();
 
+    */
+
+
+
+}
+
+void clearFIFO(){
+    writeBuffer[0] = FIFO_WR_PTR;
+    writeBuffer[1] = 0;
+    i2c.writeCount = 2;
+    i2c.readCount = 0;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+
+
+    writeBuffer[0] = OVF_COUNTER;
+    writeBuffer[1] = 0;
+    i2c.writeCount = 2;
+    i2c.readCount = 0;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+
+
+    writeBuffer[0] = FIFO_RD_PTR;
+    writeBuffer[1] = 0;
+    i2c.writeCount = 2;
+    i2c.readCount = 0;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
 }
 
 void Isr()

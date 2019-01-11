@@ -51,10 +51,10 @@ void HeartRateFxn(UArg arg0, UArg arg1){
     HR4_setup();
 
     while(1){
-        temp = getTemp();
-        Mailbox_post(mbox_input,&temp,BIOS_WAIT_FOREVER);
+        //temp = getTemp();
+        //Mailbox_post(mbox_input,&temp,BIOS_WAIT_FOREVER);
         Task_sleep(1000);
-        //getHeartRate();
+        getHeartRate();
     }
 
 

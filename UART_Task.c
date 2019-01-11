@@ -4,6 +4,7 @@
  */
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <inc/hw_memmap.h>
 
 /* XDCtools Header files */
@@ -61,6 +62,13 @@ void UARTFxn(UArg arg0, UArg arg1)
     /* Loop forever echoing */
     while (1) {
         char input;
+
+        /*uint8_t ret;
+        char buffer[64];
+        float myFloat = -35.993;
+        ret = snprintf(buffer, sizeof buffer, "%f", myFloat);
+        UART_write(uart, &buffer, ret-3);*/
+
         UART_read(uart, &input, 1);
         GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 1);
         UART_write(uart, &input, 1); // Remove this line to stop echoing!

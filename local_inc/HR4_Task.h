@@ -12,6 +12,13 @@
 #include <stdint.h>
 #include <xdc/std.h>
 
+struct mbox_input_data {
+    bool uart_flag;
+    uint8_t temp;
+    uint8_t heartrate;
+    uint8_t spo;
+};
+
 int setup_HeartRate_Task(UArg arg0, UArg arg1);
 void HeartRateFxn(UArg arg0, UArg arg1);
 
