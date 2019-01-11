@@ -19,6 +19,10 @@
 #include <ti/sysbios/knl/Event.h>
 #include <ti/sysbios/knl/Task.h>
 
+/* TI-RTOS Header files */
+#include <driverlib/sysctl.h>
+#include <ti/drivers/SPI.h>
+
 /* Driverlib headers */
 #include <driverlib/gpio.h>
 
@@ -31,41 +35,40 @@
 
 /* Application headers */
 #include "font.h"
-#include "UART_Task.h"
-#include "OLED_defines.h"
 #include "OLED_Task.h"
+#include "OLED_defines.h"
 
-void oled_command()
+#include "UART_Task.h"
+
+void oled_command(unsigned char reg_index, unsigned char reg_value)
 {
     //select index addres
-    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0);
-    GPIOPinWrite(GPIO_PORTM_BASE, PWM_PIN, 0);
-    spi_write();
-    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0xFF);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);
+    GPIOPinWrite(PWM_PORT, PWM_PIN, 0);
+    SPI_write(reg_index);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
 
     //write to reg
-    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0);
-    GPIOPinWrite(GPIO_PORTM_BASE, PWM_PIN, 0xFF);
-    spi_write();
-    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0xFF);
-
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);
+    GPIOPinWrite(PWM_PORT, PWM_PIN, 0xFF);
+    SPI_write(reg_value);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
 }
 
-void oled_data()
+void oled_data(unsigned char data_value)
 {
-    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0);
-    GPIOPinWrite(GPIO_PORTM_BASE, PWM_PIN, 0xFF);
-    spi_write();
-    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0xFF);
-
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);
+    GPIOPinWrite(PWM_PORT, PWM_PIN, 0xFF);
+    SPI_write(data_value);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
 }
 
-void init_oled()
+void oled_init()
 {
 
-    GPIOPinWrite(GPIO_PORTC_BASE, RST_PIN, Display_Soft_Reset_LOW);
+    GPIOPinWrite(RST_PORT, RST_PIN, Display_Soft_Reset_LOW);
     Task_sleep(10);
-    GPIOPinWrite(GPIO_PORTC_BASE, RST_PIN, Display_Soft_Reset_HIGH);
+    GPIOPinWrite(RST_PORT, RST_PIN, Display_Soft_Reset_HIGH);
     Task_sleep(10);
 
     //soft reset
@@ -74,6 +77,7 @@ void init_oled()
     oled_command(STANDBY_ON_OFF, 0x01);
     Task_sleep(5);
     oled_command(STANDBY_ON_OFF, 0x00);
+    Task_sleep(5);
     //display off
     oled_command(DISPLAY_ON_OFF, 0x00);
     //set frame rate 95Hz
@@ -130,24 +134,147 @@ void init_oled()
 
 void DDRAM_access()
 {
-    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0);
-    GPIOPinWrite(GPIO_PORTM_BASE, PWM_PIN, 0);
-    spi_write();
-    GPIOPinWrite(GPIO_PORTH_BASE, CS_PIN, 0xFF);
-
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);
+    GPIOPinWrite(PWM_PORT, PWM_PIN, 0);
+    SPI_write(0x08);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
 }
 
-void oled_MemorySize()
+void oled_MemorySize(char X1, char X2, char Y1, char Y2)
 {
+    oled_command(MEM_X1, X1);
+    oled_command(MEM_X2, X2);
+    oled_command(MEM_Y1, Y1);
+    oled_command(MEM_Y2, Y2);
+}
 
+void oled_Color(char colorMSB, char colorLSB)
+{
+    oled_data(colorMSB);
+    oled_data(colorLSB);
 }
 
 void oled_Background()
 {
+    unsigned int j;
+    //set Memory Write/Read mode
+    oled_command(MEMORY_WRITE_READ, 0x02);
+    //set color
+    oled_MemorySize(0x00, 0x5F, 0x00, 0x5F);
+    DDRAM_access();
+
+    for (j = 0; j < 9216; j++)
+    {
+        oled_data(0x01F);
+    }
+}
+
+void oled_Ausgabe(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
+                  uint8_t font_size_y, uint16_t font_color, uint16_t bg_color,
+                  char draw_me, char *font_array)
+{
+    int i, j;
+    oled_MemorySize(start_x, start_x + font_size_x - 1, start_y,
+                    start_y + font_size_y - 1);
+    DDRAM_access();
+    for (j = 0; j < font_size_y; j++)
+    {
+        for (i = 0; i < font_size_x; i++)
+        {
+            if ((*((font_array + draw_me * font_size_y) + j) >> i) & 0x1)
+                oled_data(font_color);
+            else
+                oled_data(bg_color);
+        }
+    }
+}
+
+/*
+ * SPI Setup
+ */
+
+/*void SPIFxn(UArg arg0, UArg arg1)
+{
+
+    Board_initSPI();
+    SPI_init();
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOH);
+    GPIOPinTypeGPIOOutput(GPIO_PORTH_BASE, CS_PIN);
+
+    //UInt peripheralNum = 0;
+    SPI_Handle spi;
+    SPI_Params spiParams;
+
+    SPI_Params_init(&spiParams);
+    spiParams.transferMode = SPI_MODE_BLOCKING;
+    spiParams.transferCallbackFxn = NULL;
+    spiParams.frameFormat = SPI_POL1_PHA1;    //Polarität und Phasenverschiebung
+    spiParams.bitRate = 1000000;
+    spiParams.dataSize = 8;
+
+    spi = SPI_open(Board_SPI0, &spiParams);
+    if (spi == NULL)
+    {
+        System_abort("Error initializing SPI\n");
+    }
+    else
+    {
+        System_printf("SPI initialized\n");
+    }
+
+    System_flush();
+}*/
+
+void oled_Fxn(UArg arg0, UArg arg1)
+{
+    uint8_t i, x_val = 0;
+    char displaystring[] = "Hallo Bärtl";
+    oled_init();
+    System_printf("init done\n");
+    System_flush();
+    //OLED_C_Beckground();
+    //System_printf("BG done\n");
+    //System_flush();
+
+    oled_command(0c1D, 0x02); //Set Memory Read/Write mode
+    oled_MemorySize(0x00, 0x5F, 0x00, 0x5F);
+    DDRAM_access();
+    oled_Beckground();
+    for (i = 0; i < sizeof(displaystring); i++)
+    {
+        oled_Ausgabe(x_val, 0x00, 0x08, 0xC, 0xFFFF, 0x0000,
+                        displaystring[i], (char*) font2);
+        x_val += 0x08;
+    }
 
 }
 
-void spi_write()
+void setup_SPI_Task()
 {
+    Task_Params taskSPIParams;
+    Task_Handle taskSPI;
+    Error_Block eb;
 
+    Error_init(&eb);
+    Task_Params_init(&taskSPIParams);
+    taskSPIParams.stackSize = 1024; /* stack in bytes */
+    taskSPIParams.priority = 15; /* 0-15 (15 is highest priority on default -> see RTOS Task configuration) */
+    taskSPI = Task_create(oled_Fxn, &taskSPIParams, &eb);
+
+    //taskSPI = Task_create((Task_FuncPtr) SPIFxn, &taskSPIParams, &eb);
+
+    if (taskSPI == NULL)
+    {
+        System_abort("Create TaskSPI failed");
+    }
+    // return (0);
+}
+
+void SPI_write(UChar byte)
+{
+    SSIDataPut(SSI1_BASE, data);
+    while (SSIBusy((SSI1_BASE)))
+    {
+    }
 }

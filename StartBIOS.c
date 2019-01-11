@@ -28,6 +28,7 @@
 #include <driverlib/sysctl.h>
 #include <driverlib/pin_map.h>
 #include <driverlib/i2c.h>
+#include <driverlib/ssi.h>
 
 /* Board Header files */
 #include <Board.h>
@@ -35,7 +36,10 @@
 #include <HR4_Task.h>
 
 /* Application headers */
-#include <UART_Task.h>
+#include "OLED_defines.h"
+#include "OLED_Task.h"
+#include "UART_Task.h"
+
 
 int main(void)
 {
@@ -45,7 +49,8 @@ int main(void)
     ui32SysClock = Board_initGeneral(120*1000*1000);
     (void)ui32SysClock; // We don't really need this (yet)
 
-    Board_initI2C();
+    //Board_initI2C();
+    Board_initSPI();
 
 
     /* Init I²C */
@@ -64,7 +69,15 @@ int main(void)
     //I2CMasterInitExpClk(I2C8_BASE, ui32SysClock, false);
     //I2CMasterEnable(I2C8_BASE);
 
+
+    /*SSIClockSourceSet(SSI2_BASE, SSI_CLOCK_SYSTEM);
+    SSIConfigSetExpClk(SSI2_BASE, ui32SysClock, SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 60 * 1000 * 1000, 16);
+    SSIEnable(SSI2_BASE);*/
+
+    setup_UART_Task();
     setup_HeartRate_Task((UArg) 0, (UArg) 0);
+
+
 
 
 

@@ -8,10 +8,15 @@
 
 #define Display_Soft_Reset_LOW 0x00
 #define Display_Soft_Reset_HIGH 0xFF
-#define RST_PIN GPIO_PIN_7
-#define CS_PIN GPIO_PIN_2
-#define PWM_PIN GPIO_PIN_3
 
+#define CS_PORT GPIO_PORTH_BASE
+#define CS_PIN GPIO_PIN_2
+
+#define RST_PORT GPIO_PORTC_BASE
+#define RST_PIN GPIO_PIN_7
+
+#define PWM_PORT GPIO_PORTM_BASE
+#define PWM_PIN GPIO_PIN_3
 
 #define SOFT_RESET 0x01
 #define DISPLAY_ON_OFF 0x02
@@ -54,5 +59,7 @@
 #define RGB_IF 0xE0
 #define RGB_POL 0xE1
 #define DISPLAY_MODE_CONTROL 0xE5
+
+
 
 #endif
