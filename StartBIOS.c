@@ -34,9 +34,14 @@
 #include <Board.h>
 #include <EK_TM4C1294XL.h>
 #include <HR4_Task.h>
+#include <Broker_Task.h>
 
 /* Application headers */
 #include <UART_Task.h>
+
+void initMailbox(void);
+//Mailbox Handler
+Mailbox_Handle mbox_input;
 
 int main(void)
 {
@@ -55,7 +60,9 @@ int main(void)
     //I2CMasterInitExpClk(I2C8_BASE, ui32SysClock, false);
     //I2CMasterEnable(I2C8_BASE);
 
-    setup_HeartRate_Task((UArg) 0, (UArg) 0);
+    initMailbox();
+    setup_Broker_Task((UArg) mbox_input,(UArg) 0);
+    setup_HeartRate_Task((UArg) mbox_input, (UArg) 0);
 
 
 
@@ -72,4 +79,18 @@ int main(void)
 
     /* Start BIOS */
     BIOS_start();
+}
+
+void initMailbox(void) {
+
+
+    Error_Block eb;
+    Mailbox_Params mailboxParams;
+    Mailbox_Params_init(&mailboxParams);
+    Error_init(&eb);
+    mbox_input = Mailbox_create(sizeof(uint32_t), 10, &mailboxParams, &eb);
+    if (mbox_input == NULL)
+        System_abort("Mailbox create failed");
+
+    System_printf("Created MailBox \n");
 }

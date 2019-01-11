@@ -199,7 +199,7 @@ int getTemp()
     //System_printf("Calculated Temperature: %d.%d \n", ret_tint, frac);
     System_flush();
 
-    return 0;
+    return ret_tint;
 }
 
 void getHeartRate()
