@@ -37,8 +37,8 @@
 #include <Broker_Task.h>
 
 /* Application headers */
-#include "OLED_defines.h"
-#include "OLED_Task.h"
+//#include <OLED_defines.h>
+#include <OLED_Task.h>
 //#include "UART_Task.h"
 
 /*void initMailbox(void);
@@ -48,7 +48,6 @@ Mailbox_Handle mbox_input;*/
 int main(void)
 {
     uint32_t ui32SysClock = Board_initGeneral(120 * 1000 * 1000);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
     Board_initSPI();
 
     /* Call board init functions. */
@@ -58,7 +57,7 @@ int main(void)
     Board_initI2C();
     Board_initGPIO();
 
-
+/*
     SSIClockSourceSet(SSI2_BASE, SSI_CLOCK_SYSTEM);
     SSIConfigSetExpClk(SSI2_BASE, ui32SysClock, SSI_FRF_MOTO_MODE_0,
                        SSI_MODE_MASTER, 60 * 1000 * 1000, 16);
@@ -72,17 +71,20 @@ int main(void)
     GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
     //DC
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOM);
-    GPIOPinTypeGPIOOutput(PWM_PORT, PWM_PIN);
+    GPIOPinTypeGPIOOutput(PWM_PORT, PWM_PIN);*/
 
-    setup_SPI_Task();
+    setup_SPI_Task(0,0);
+    //setup_HeartRate_Task(0,0);
 
     /*initMailbox();
     setup_Broker_Task((UArg) mbox_input, (UArg) 0);
     setup_HeartRate_Task((UArg) mbox_input, (UArg) 0);
     */
 
+
     //Initialize+start UART Task
-    (void)setup_UART_Task();
+    //(void)setup_UART_Task();
+
     System_printf("Created UART Task\n");
 
     /* SysMin will only print to the console upon calling flush or exit */

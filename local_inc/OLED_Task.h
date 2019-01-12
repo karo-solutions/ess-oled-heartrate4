@@ -14,7 +14,7 @@ void oled_Background(void);
 void oled_Ausgabe(uint8_t start_x, uint8_t start_y, uint8_t font_size_x, uint8_t font_size_y, uint16_t font_color, uint16_t bg_color, char draw_me, char *font_array);
 void oled_Fxn(UArg arg0, UArg arg1);
 
-void setup_SPI_Task(void);
+int setup_SPI_Task(UArg arg0, UArg arg1);
 void SPI_write(uint16_t data);
 
 #endif
