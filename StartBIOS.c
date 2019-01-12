@@ -37,7 +37,7 @@
 #include <Broker_Task.h>
 
 /* Application headers */
-//#include <OLED_defines.h>
+#include <OLED_defines.h>
 #include <OLED_Task.h>
 //#include "UART_Task.h"
 
@@ -57,23 +57,20 @@ int main(void)
     Board_initI2C();
     Board_initGPIO();
 
-/*
+
     SSIClockSourceSet(SSI2_BASE, SSI_CLOCK_SYSTEM);
     SSIConfigSetExpClk(SSI2_BASE, ui32SysClock, SSI_FRF_MOTO_MODE_0,
                        SSI_MODE_MASTER, 60 * 1000 * 1000, 16);
     SSIEnable(SSI2_BASE);
 
     //RST
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
     GPIOPinTypeGPIOOutput(RST_PORT, RST_PIN);
     //CS
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOH);
     GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
     //DC
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOM);
-    GPIOPinTypeGPIOOutput(PWM_PORT, PWM_PIN);*/
+    GPIOPinTypeGPIOOutput(PWM_PORT, PWM_PIN);
 
-    setup_SPI_Task(0,0);
+    setup_OLED_Task(0,0);
     //setup_HeartRate_Task(0,0);
 
     /*initMailbox();
