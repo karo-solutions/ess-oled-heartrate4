@@ -34,56 +34,54 @@
 #include <Board.h>
 #include <EK_TM4C1294XL.h>
 #include <HR4_Task.h>
+#include <Broker_Task.h>
 
 /* Application headers */
 #include "OLED_defines.h"
 #include "OLED_Task.h"
-#include "UART_Task.h"
+//#include "UART_Task.h"
 
+/*void initMailbox(void);
+//Mailbox Handler
+Mailbox_Handle mbox_input;*/
 
 int main(void)
 {
-    uint32_t ui32SysClock;
-
-    /* Call board init functions. */
-    ui32SysClock = Board_initGeneral(120*1000*1000);
-    (void)ui32SysClock; // We don't really need this (yet)
-
-    //Board_initI2C();
+    uint32_t ui32SysClock = Board_initGeneral(120 * 1000 * 1000);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
     Board_initSPI();
 
-
-    /* Init I²C */
-
-    //SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    /* Call board init functions. */
+        (void) ui32SysClock; // We don't really need this (yet)
 
 
-    /*SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C8);
-    GPIOPinConfigure(GPIO_PA2_I2C8SCL);
-    GPIOPinConfigure(GPIO_PA3_I2C8SDA);
-    GPIOPinTypeI2CSCL(GPIO_PORTA_BASE, GPIO_PIN_2);
-    GPIOPinTypeI2C(GPIO_PORTA_BASE, GPIO_PIN_3);
-    see EK_TM4C1294XL.c*/
+    Board_initI2C();
+    Board_initGPIO();
 
 
-    //I2CMasterInitExpClk(I2C8_BASE, ui32SysClock, false);
-    //I2CMasterEnable(I2C8_BASE);
+    SSIClockSourceSet(SSI2_BASE, SSI_CLOCK_SYSTEM);
+    SSIConfigSetExpClk(SSI2_BASE, ui32SysClock, SSI_FRF_MOTO_MODE_0,
+                       SSI_MODE_MASTER, 60 * 1000 * 1000, 16);
+    SSIEnable(SSI2_BASE);
 
+    //RST
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+    GPIOPinTypeGPIOOutput(RST_PORT, RST_PIN);
+    //CS
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOH);
+    GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
+    //DC
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOM);
+    GPIOPinTypeGPIOOutput(PWM_PORT, PWM_PIN);
 
-    /*SSIClockSourceSet(SSI2_BASE, SSI_CLOCK_SYSTEM);
-    SSIConfigSetExpClk(SSI2_BASE, ui32SysClock, SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 60 * 1000 * 1000, 16);
-    SSIEnable(SSI2_BASE);*/
+    setup_SPI_Task();
 
-    setup_UART_Task();
-    setup_HeartRate_Task((UArg) 0, (UArg) 0);
+    /*initMailbox();
+    setup_Broker_Task((UArg) mbox_input, (UArg) 0);
+    setup_HeartRate_Task((UArg) mbox_input, (UArg) 0);
+    */
 
-
-
-
-
-
-
-    /*Initialize+start UART Task*/
+    //Initialize+start UART Task
     (void)setup_UART_Task();
     System_printf("Created UART Task\n");
 
@@ -95,3 +93,17 @@ int main(void)
     /* Start BIOS */
     BIOS_start();
 }
+
+/*void initMailbox(void)
+{
+
+    Error_Block eb;
+    Mailbox_Params mailboxParams;
+    Mailbox_Params_init(&mailboxParams);
+    Error_init(&eb);
+    mbox_input = Mailbox_create(sizeof(uint32_t), 10, &mailboxParams, &eb);
+    if (mbox_input == NULL)
+        System_abort("Mailbox create failed");
+
+    System_printf("Created MailBox \n");
+}*/

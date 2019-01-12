@@ -1,7 +1,7 @@
 /*
- * HR4_Task.c
+ * Broker_Task.c
  *
- *  Created on: Jan 9, 2019
+ *  Created on: Jan 11, 2019
  *      Author: Robert
  */
 #include <stdbool.h>
@@ -21,7 +21,6 @@
 #include <ti/sysbios/knl/Clock.h>
 #include <ti/sysbios/knl/Event.h>
 #include <ti/sysbios/knl/Mailbox.h>
-//#include <ti/sysbios/knl/Semaphore.h>
 #include <ti/drivers/I2C.h>
 
 /* Driverlib headers */
@@ -32,46 +31,45 @@
 #include <EK_TM4C1294XL.h>
 
 /* Application headers */
-#include <HR4_Task.h>
-#include <HR4_helper.h>
+#include <Broker_Task.h>
 
 
 
 /*
  *  Setup Clock
  */
-void HeartRateFxn(UArg arg0, UArg arg1){
+void BrokerFxn(UArg arg0, UArg arg1){
     uint32_t temp;
 
-    System_printf("HeartRate_Task created!\n");
+    System_printf("Broker_Task created!\n");
     System_flush();
 
     Mailbox_Handle mbox_input = (Mailbox_Handle) arg0;
 
-    HR4_setup();
 
     while(1){
-        //temp = getTemp();
-        //Mailbox_post(mbox_input,&temp,BIOS_WAIT_FOREVER);
-        Task_sleep(1000);
-        getHeartRate();
+        Mailbox_pend(mbox_input,&temp, BIOS_WAIT_FOREVER);
+
+        System_printf("Broker MBOX triggered\n Temp: %d\n",temp);
+        System_flush();
+
     }
 
 
 }
 
-int setup_HeartRate_Task(UArg mbox_input, UArg arg1) {
+int setup_Broker_Task(UArg mbox_input, UArg arg1) {
 
-    Task_Params taskHRParams;
+    Task_Params taskBrokerParams;
     Task_Handle taskHR;
     Error_Block eb;
 
     Error_init(&eb);
-    Task_Params_init(&taskHRParams);
-    taskHRParams.stackSize = 1024;
-    taskHRParams.priority = 15;
-    taskHRParams.arg0 = (UArg) mbox_input;
-    taskHR = Task_create((Task_FuncPtr) HeartRateFxn, &taskHRParams, &eb);
+    Task_Params_init(&taskBrokerParams);
+    taskBrokerParams.stackSize = 1024;
+    taskBrokerParams.priority = 15;
+    taskBrokerParams.arg0 = (UArg) mbox_input;
+    taskHR = Task_create((Task_FuncPtr) BrokerFxn, &taskBrokerParams, &eb);
     if (taskHR == NULL) {
         return 1;
     } else {

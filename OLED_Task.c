@@ -34,9 +34,9 @@
 #include <driverlib/sysctl.h>
 
 /* Application headers */
-#include "font.h"
 #include "OLED_Task.h"
 #include "OLED_defines.h"
+#include "font.h"
 
 #include "UART_Task.h"
 
@@ -154,7 +154,61 @@ void oled_Color(char colorMSB, char colorLSB)
     oled_data(colorLSB);
 }
 
-void oled_Background()
+void oled_Background(){
+    unsigned j;
+
+    oled_command(0x1D,0x02);                //Set Memory Read/Write mode
+
+    oled_MemorySize(0x00,0x5F,0x00,0x5F);
+    DDRAM_access();
+    for(j=0;j<9216;j++){
+                        oled_Color(0xFF,0xFF);
+                       }
+                       SysCtlDelay(10000000);
+
+    oled_MemorySize(0x05,0x5A,0x05,0x5A);
+    DDRAM_access();
+    for(j=0;j<8100;j++){
+                        oled_Color(0x0C,0xC0);
+                       }
+                       //SysCtlDelay(1000);
+
+    oled_MemorySize(0x0A,0x55,0x0A,0x55);
+    DDRAM_access();
+    for(j=0;j<7225;j++){
+                        oled_Color(0xFF,0x00);
+                       }
+                       //SysCtlDelay(1000);
+
+    oled_MemorySize(0x0F,0x50,0x0F,0x50);
+    DDRAM_access();
+    for(j=0;j<6400;j++){
+                        oled_Color(0x80,0x00);
+                       }
+                      // SysCtlDelay(1000);
+
+    oled_MemorySize(0x14,0x4B,0x14,0x4B);
+    DDRAM_access();
+    for(j=0;j<5625;j++){
+                        oled_Color(0xF8,0x00);
+                       }
+                       //SysCtlDelay(1000);
+
+    oled_MemorySize(0x19,0x46,0x19,0x46);
+    DDRAM_access();
+    for(j=0;j<4900;j++){
+                        oled_Color(0x00,0xFF);
+                       }
+                      // SysCtlDelay(1000);
+    oled_MemorySize(0x1E,0x41,0x1E,0x41);
+    DDRAM_access();
+    for(j=0;j<4225;j++){
+                        oled_Color(0x80,0xFF);
+                       }
+                       SysCtlDelay(5000);
+}
+
+/*void oled_Background()
 {
     unsigned int j;
     //set Memory Write/Read mode
@@ -167,7 +221,7 @@ void oled_Background()
     {
         oled_data(0x01F);
     }
-}
+}*/
 
 void oled_Ausgabe(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
                   uint8_t font_size_y, uint16_t font_color, uint16_t bg_color,
@@ -237,10 +291,10 @@ void oled_Fxn(UArg arg0, UArg arg1)
     //System_printf("BG done\n");
     //System_flush();
 
-    oled_command(0c1D, 0x02); //Set Memory Read/Write mode
+    oled_command(0x1D, 0x02); //Set Memory Read/Write mode
     oled_MemorySize(0x00, 0x5F, 0x00, 0x5F);
     DDRAM_access();
-    oled_Beckground();
+    oled_Background();
     for (i = 0; i < sizeof(displaystring); i++)
     {
         oled_Ausgabe(x_val, 0x00, 0x08, 0xC, 0xFFFF, 0x0000,
@@ -255,26 +309,21 @@ void setup_SPI_Task()
     Task_Params taskSPIParams;
     Task_Handle taskSPI;
     Error_Block eb;
-
     Error_init(&eb);
     Task_Params_init(&taskSPIParams);
     taskSPIParams.stackSize = 1024; /* stack in bytes */
     taskSPIParams.priority = 15; /* 0-15 (15 is highest priority on default -> see RTOS Task configuration) */
     taskSPI = Task_create(oled_Fxn, &taskSPIParams, &eb);
-
-    //taskSPI = Task_create((Task_FuncPtr) SPIFxn, &taskSPIParams, &eb);
-
     if (taskSPI == NULL)
     {
         System_abort("Create TaskSPI failed");
     }
-    // return (0);
 }
 
-void SPI_write(UChar byte)
+void SPI_write(uint16_t data)
 {
     SSIDataPut(SSI1_BASE, data);
-    while (SSIBusy((SSI1_BASE)))
+    while (SSIBusy(SSI1_BASE))
     {
     }
 }
