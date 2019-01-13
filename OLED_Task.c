@@ -19,9 +19,6 @@
 #include <ti/sysbios/knl/Event.h>
 #include <ti/sysbios/knl/Task.h>
 
-/* TI-RTOS Header files */
-#include <ti/drivers/SPI.h>
-
 /* Driverlib headers */
 #include <driverlib/gpio.h>
 
@@ -32,10 +29,16 @@
 #include <driverlib/ssi.h>
 #include <driverlib/sysctl.h>
 
+/* TI-RTOS Header files */
+#include <ti/drivers/SPI.h>
+
 /* Application headers */
-#include <OLED_Task.h>
-#include <OLED_defines.h>
-#include <font.h>
+#include "OLED_Task.h"
+#include "OLED_defines.h"
+#include "font.h"
+
+void onwSpiInit();
+    SPI_Handle masterSpi;
 
 void oled_command(unsigned char reg_index, unsigned char reg_value)
 {
@@ -64,7 +67,6 @@ void oled_data(unsigned char data_value)
 
 void oled_init()
 {
-
     GPIOPinWrite(RST_PORT, RST_PIN, Display_Soft_Reset_LOW);
     Task_sleep(10);
     GPIOPinWrite(RST_PORT, RST_PIN, Display_Soft_Reset_HIGH);
@@ -130,6 +132,7 @@ void oled_init()
     //display on
     oled_command(DISPLAY_ON_OFF, 0x01);
     System_printf("OLED Init\n");
+
 }
 
 void DDRAM_access()
@@ -149,69 +152,14 @@ void oled_MemorySize(char X1, char X2, char Y1, char Y2)
     oled_command(MEM_Y2, Y2);
     System_printf("Memory Size\n");
 }
-
-void oled_Color(char colorMSB, char colorLSB)
+///////////////////////////////////////////////////////
+/*void oled_Color(char colorMSB, char colorLSB)
 {
     oled_data(colorMSB);
     oled_data(colorLSB);
     System_printf("OLED Color\n");
-}
-
-/*void oled_Background(){
-    unsigned j;
-
-    oled_command(0x1D,0x02);                //Set Memory Read/Write mode
-
-    oled_MemorySize(0x00,0x5F,0x00,0x5F);
-    DDRAM_access();
-    for(j=0;j<9216;j++){
-                        oled_Color(0xFF,0xFF);
-                       }
-                       SysCtlDelay(10000000);
-
-    oled_MemorySize(0x05,0x5A,0x05,0x5A);
-    DDRAM_access();
-    for(j=0;j<8100;j++){
-                        oled_Color(0x0C,0xC0);
-                       }
-                       //SysCtlDelay(1000);
-
-    oled_MemorySize(0x0A,0x55,0x0A,0x55);
-    DDRAM_access();
-    for(j=0;j<7225;j++){
-                        oled_Color(0xFF,0x00);
-                       }
-                       //SysCtlDelay(1000);
-
-    oled_MemorySize(0x0F,0x50,0x0F,0x50);
-    DDRAM_access();
-    for(j=0;j<6400;j++){
-                        oled_Color(0x80,0x00);
-                       }
-                      // SysCtlDelay(1000);
-
-    oled_MemorySize(0x14,0x4B,0x14,0x4B);
-    DDRAM_access();
-    for(j=0;j<5625;j++){
-                        oled_Color(0xF8,0x00);
-                       }
-                       //SysCtlDelay(1000);
-
-    oled_MemorySize(0x19,0x46,0x19,0x46);
-    DDRAM_access();
-    for(j=0;j<4900;j++){
-                        oled_Color(0x00,0xFF);
-                       }
-                      // SysCtlDelay(1000);
-    oled_MemorySize(0x1E,0x41,0x1E,0x41);
-    DDRAM_access();
-    for(j=0;j<4225;j++){
-                        oled_Color(0x80,0xFF);
-                       }
-                       SysCtlDelay(5000);
-
-                       System_printf("Background\n");
 }*/
+///////////////////////////////////////////////////////
 
 void oled_Background()
 {
@@ -227,6 +175,24 @@ void oled_Background()
         oled_data(0x01F);
     }
 }
+
+
+/*void oled_Ausgabe(uint8_t x_coordinate, uint8_t y_coordinate, uint8_t font_width, uint8_t font_height, uint16_t font_color, uint16_t background_color, char char_to_draw){
+    int i, j;
+    oled_MemorySize(x_coordinate, x_coordinate + font_width - 1, y_coordinate, y_coordinate + font_height - 1); // size of font...
+    DDRAM_access(); //write to DDRAM with the last set memory size.
+    for(i=0; i < font_height; i++)  //schleife in der schleife. 2 dimensionales array, ane lauft owe andre ume, damit alles geschrieben wird. (char to draw is parameter i get), . 14=x
+    {
+        for(j=0; j < font_width; j++) //j geht bits der hexcodes durch.
+        {
+            if((font[char_to_draw][i]>>j) & 0x1) // logisch &1 -> wenn 1er an der bit pos, dann oled data mit font data. wenn kein 1er -> beckground.
+                oled_data(font_color);
+            else
+                oled_data(background_color);
+        }
+    }
+}*/
+
 
 void oled_Ausgabe(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
                   uint8_t font_size_y, uint16_t font_color, uint16_t bg_color,
@@ -288,14 +254,13 @@ void oled_Ausgabe(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
 
 void oled_Fxn(UArg arg0, UArg arg1)
 {
+    onwSpiInit();
+
     uint8_t i, x_val = 0;
-    char displaystring[] = "Hallo Bärtl";
+    char displaystring[] = "KOMISCH!!";
     oled_init();
     System_printf("init done\n");
     System_flush();
-    //OLED_C_Beckground();
-    //System_printf("BG done\n");
-    //System_flush();
 
     oled_command(0x1D, 0x02); //Set Memory Read/Write mode
     oled_MemorySize(0x00, 0x5F, 0x00, 0x5F);
@@ -304,14 +269,56 @@ void oled_Fxn(UArg arg0, UArg arg1)
     for (i = 0; i < sizeof(displaystring); i++)
     {
         oled_Ausgabe(x_val, 0x00, 0x08, 0xC, 0xFFFF, 0x0000,
-                        displaystring[i], (char*) font2);
+                        displaystring[i], (char*)font2);
         x_val += 0x08;
     }
     System_printf("OLED Fxn\n");
 
 }
 
-int setup_SPI_Task(UArg arg0, UArg arg1)
+
+
+void onwSpiInit()
+{
+
+    /* Initialize SPI handle as default master */
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOH);
+    GPIOPinTypeGPIOOutput(GPIO_PORTH_BASE, CS_PIN);
+
+    SPI_Params spiParams;
+
+       SPI_Params_init(&spiParams);
+       spiParams.transferMode = SPI_MODE_BLOCKING;
+       spiParams.transferCallbackFxn = NULL;
+       spiParams.frameFormat = SPI_POL1_PHA1;    //Polarität und Phasenverschiebung
+       spiParams.bitRate = 1000000;
+       spiParams.dataSize = 8;
+
+
+    masterSpi = SPI_open(Board_SPI0, &spiParams);
+    if (masterSpi == NULL) {
+        System_abort("Error initializing SPI\n");
+    }
+    else {
+        System_printf("SPI initialized\n");
+    }
+
+    /* Initialize master SPI transaction structure */
+
+
+/*
+    SPI_close(masterSpi);
+
+    System_printf("Done\n");
+
+    System_flush();
+*/
+}
+
+
+
+int setup_OLED_Task(UArg arg0, UArg arg1)
 {
     Task_Params taskSPIParams;
     Task_Handle taskSPI;
@@ -329,11 +336,21 @@ int setup_SPI_Task(UArg arg0, UArg arg1)
     }
 }
 
-void SPI_write(uint16_t data)
+void SPI_write(uint8_t data)
 {
-    SSIDataPut(SSI1_BASE, data);
-    while (SSIBusy(SSI1_BASE))
-    {
+    SPI_Transaction masterTransaction;
+    bool transferOK;
+
+    masterTransaction.count = 1;
+    masterTransaction.txBuf = (Ptr)&data;
+    masterTransaction.rxBuf = NULL;
+
+    /* Initiate SPI transfer */
+    transferOK = SPI_transfer(masterSpi, &masterTransaction);
+
+    if(transferOK) {
     }
-    System_printf("SPI Write\n");
+    else {
+        System_printf("Unsuccessful master SPI transfer");
+    }
 }

@@ -2,7 +2,6 @@
  * helper for OLED_C SEPS114A rev 1.0
  */
 
-
 #ifndef OLED_DEFINES_H_
 #define OLED_DEFINES_H_
 
