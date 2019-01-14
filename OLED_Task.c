@@ -37,7 +37,6 @@
 #include "OLED_defines.h"
 #include "font.h"
 
-void onwSpiInit();
 SPI_Handle masterSpi;
 
 void oled_command(uint16_t reg_index, uint16_t reg_value)
@@ -164,7 +163,7 @@ void oled_Background()
 
     for (j = 0; j < 9216; j++)
     {
-        oled_data(0x01F);
+        oled_data(BLUE);
     }
 }
 
@@ -189,25 +188,43 @@ void oled_Ausgabe(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
     System_printf("OLED Ausgabe\n");
 }
 
-void oled_Fxn(UArg arg0, UArg arg1)
-{
-    onwSpiInit();
+//void oled_Ausgabe()
 
-    uint8_t i, x_val = 0;
-    char displaystring[] = "Dere, Pat!!!";
+void oled_Fxn(UArg arg0)
+{
+    ownSpiInit();
+
+    uint8_t i, column;
+    char tempstring[] = "C-Temp:", pulsstring[] = "Puls:", spo2string[] = "SpO2:";
     oled_init();
     System_printf("init done\n");
     System_flush();
 
-    oled_command(0x1D, 0x02); //Set Memory Read/Write mode
+    oled_command(MEMORY_WRITE_READ, 0x02); //Set Memory Read/Write mode
     oled_MemorySize(0x00, 0x5F, 0x00, 0x5F);
     DDRAM_access();
     oled_Background();
-    for (i = 0; i < sizeof(displaystring); i++)
+
+    column = start_left;
+    for (i = 0; i < sizeof(tempstring); i++)
     {
-        oled_Ausgabe(x_val, 0x00, 0x08, 0xC, 0xFFFF, 0x0000, displaystring[i],
+        oled_Ausgabe(column, row_TEMP, font_width, font_hight, WHITE, BLUE, tempstring[i],
                      (char*) font2);
-        x_val += 0x08;
+        column += 0x08;
+    }
+    column = start_left;
+    for (i = 0; i < sizeof(pulsstring); i++)
+    {
+        oled_Ausgabe(column, row_PULS, font_width, font_hight, WHITE, BLUE, pulsstring[i],
+                     (char*) font2);
+        column += 0x08;
+    }
+    column = start_left;
+    for (i = 0; i < sizeof(spo2string); i++)
+    {
+        oled_Ausgabe(column, row_SPO2, font_width, font_hight, WHITE, BLUE, spo2string[i],
+                     (char*) font2);
+        column += 0x08;
     }
     System_printf("OLED Fxn\n");
 
@@ -216,7 +233,7 @@ void oled_Fxn(UArg arg0, UArg arg1)
 /*
  * SPI Setup
  */
-void onwSpiInit()
+void ownSpiInit()
 {
 
     /* Initialize SPI handle as default master */

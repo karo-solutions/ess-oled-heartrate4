@@ -5,6 +5,8 @@
 #ifndef OLED_DEFINES_H_
 #define OLED_DEFINES_H_
 
+////////////////////////////////////////////////////
+/*Board defines*/
 #define Display_Soft_Reset_LOW 0x00
 #define Display_Soft_Reset_HIGH 0xFF
 
@@ -23,7 +25,20 @@
 #define SYSCTL_PERIPH_RW SYSCTL_PERIPH_GPIOE
 #define RW_PORT GPIO_PORTE_BASE
 #define RW_PIN GPIO_PIN_4
+///////////////////////////////////////////////////////
 
+#define BLUE 0x01F
+#define WHITE 0xFFFF
+#define start_left 0
+#define column_start
+#define font_hight 0xC
+#define font_width 0x08
+#define row_TEMP 0x54
+#define row_PULS 0x34
+#define row_SPO2 0x14
+
+///////////////////////////////////////////////////////
+/*OLED Adress defines*/
 #define SOFT_RESET 0x01
 #define DISPLAY_ON_OFF 0x02
 #define ANALOG_CONTROL 0x0F
@@ -65,6 +80,6 @@
 #define RGB_IF 0xE0
 #define RGB_POL 0xE1
 #define DISPLAY_MODE_CONTROL 0xE5
-
+//////////////////////////////////////////////////////////
 
 #endif
