@@ -33,9 +33,15 @@
 #define column_start
 #define font_hight 0xC
 #define font_width 0x08
+
 #define row_TEMP 0x54
 #define row_PULS 0x34
 #define row_SPO2 0x14
+
+#define disp_x_min 0x00
+#define disp_x_max 0x5F
+#define disp_y_min 0x00
+#define disp_y_max 0x5F
 
 ///////////////////////////////////////////////////////
 /*OLED Adress defines*/

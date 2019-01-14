@@ -39,38 +39,51 @@
 
 SPI_Handle masterSpi;
 
-void oled_command(uint16_t reg_index, uint16_t reg_value)
+/**
+ * write command to OLED controller
+ *
+ * @param cmd command
+ * @param data command argument
+ */
+void oled_command(uint8_t cmd, uint8_t data)
 {
     //select index addres
-    GPIOPinWrite(CS_PORT, CS_PIN, 0);
-    GPIOPinWrite(DC_PORT, DC_PIN, 0);
-    SPI_write(reg_index);
-    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);       //Chip select to LOW
+    GPIOPinWrite(DC_PORT, DC_PIN, 0);       //DC to LOW: command
+    SPI_write(cmd);
+    GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);  //Chip select to HIGH
     System_printf("Select Index Addres\n");
 
     //write to reg
-    GPIOPinWrite(CS_PORT, CS_PIN, 0);
-    GPIOPinWrite(DC_PORT, DC_PIN, 0xFF);
-    SPI_write(reg_value);
-    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);       //Chip select to LOW
+    GPIOPinWrite(DC_PORT, DC_PIN, DC_PIN);  //DC to HIGH: data
+    SPI_write(data);
+    GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);  //Chip select to HIGH
     System_printf("Write to Register\n");
 }
 
 void oled_data(uint16_t data_value)
 {
-    GPIOPinWrite(CS_PORT, CS_PIN, 0);
-    GPIOPinWrite(DC_PORT, DC_PIN, 0xFF);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);       //Chip select to LOW
+    GPIOPinWrite(DC_PORT, DC_PIN, DC_PIN);  //DC to HIGH: data
     SPI_write(data_value);
-    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
+    GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);  //Chip select to HIGH
 }
 
 void oled_init()
 {
+    /**
+     *  OLED hardware reset
+     *  resets the Display via RST pin
+     */
     GPIOPinWrite(RST_PORT, RST_PIN, Display_Soft_Reset_LOW);
     Task_sleep(10);
     GPIOPinWrite(RST_PORT, RST_PIN, Display_Soft_Reset_HIGH);
     Task_sleep(10);
 
+    /*
+     * initial settings config
+     */
     //soft reset
     oled_command(SOFT_RESET, 0x00);
     //standby on than off
@@ -134,12 +147,16 @@ void oled_init()
 
 }
 
+/**
+ * execute this command writing to the OLED DDRAM
+ */
 void DDRAM_access()
 {
-    GPIOPinWrite(CS_PORT, CS_PIN, 0);
-    GPIOPinWrite(DC_PORT, DC_PIN, 0);
-    SPI_write(0x08);
-    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);           //Chip select to LOW
+    GPIOPinWrite(DC_PORT, DC_PIN, 0);           //DC to LOW: command
+
+    SPI_write(RAM_DATA_ACCESS_PORT);
+    GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);      //Chip select to HIGH
     System_printf("DDRAM_access\n");
 }
 
@@ -157,10 +174,10 @@ void oled_Background()
     unsigned int j;
     //set Memory Write/Read mode
     oled_command(MEMORY_WRITE_READ, 0x02);
-    //set color
-    oled_MemorySize(0x00, 0x5F, 0x00, 0x5F);
-    DDRAM_access();
 
+    oled_MemorySize(disp_x_min, disp_x_max, disp_y_min, disp_y_max);
+    DDRAM_access();
+    //set color
     for (j = 0; j < 9216; j++)
     {
         oled_data(BLUE);
@@ -201,10 +218,11 @@ void oled_Fxn(UArg arg0)
     System_flush();
 
     oled_command(MEMORY_WRITE_READ, 0x02); //Set Memory Read/Write mode
-    oled_MemorySize(0x00, 0x5F, 0x00, 0x5F);
+    oled_MemorySize(disp_x_min, disp_x_max, disp_y_min, disp_y_max);
     DDRAM_access();
     oled_Background();
 
+    //write tempstring to display
     column = start_left;
     for (i = 0; i < sizeof(tempstring); i++)
     {
@@ -212,6 +230,8 @@ void oled_Fxn(UArg arg0)
                      (char*) font2);
         column += 0x08;
     }
+
+    //write pulsstring to display
     column = start_left;
     for (i = 0; i < sizeof(pulsstring); i++)
     {
@@ -219,6 +239,8 @@ void oled_Fxn(UArg arg0)
                      (char*) font2);
         column += 0x08;
     }
+
+    //write spo2string to display
     column = start_left;
     for (i = 0; i < sizeof(spo2string); i++)
     {
@@ -238,8 +260,8 @@ void ownSpiInit()
 
     /* Initialize SPI handle as default master */
 
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOH);
-    GPIOPinTypeGPIOOutput(GPIO_PORTH_BASE, CS_PIN);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_CS);
+    GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
 
     SPI_Params spiParams;
 
@@ -282,13 +304,13 @@ int setup_OLED_Task(UArg arg0, UArg arg1)
     }
 }
 
-void SPI_write(uint16_t data)
+void SPI_write(uint16_t byte)
 {
     SPI_Transaction masterTransaction;
     bool transferOK;
 
     masterTransaction.count = 1;
-    masterTransaction.txBuf = (Ptr) &data;
+    masterTransaction.txBuf = (Ptr) &byte;
     masterTransaction.rxBuf = NULL;
 
     /* Initiate SPI transfer */
