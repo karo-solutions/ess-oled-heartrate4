@@ -234,6 +234,14 @@ int getTemp()
 
 void getHeartRate()
 {
+    uint8_t sampleNum = 0;
+    uint8_t wrPtr = 0;
+    uint8_t rdPtr = 0;
+    uint32_t i = 0;
+    uint32_t red_avg;
+    uint32_t red_val;
+    uint32_t old_val = 0;
+    uint8_t temp[4] = {0};
 
     clearFIFO();
 
@@ -241,16 +249,16 @@ void getHeartRate()
     //bitSet(INT_ENABLE1, INT_PROX_EN_MASK, INT_PROX_EN);
 
 
-    Event_pend(interruptEvent, Event_Id_NONE, Event_Id_00, BIOS_WAIT_FOREVER);
-
+    //Event_pend(interruptEvent, Event_Id_NONE, Event_Id_00, BIOS_WAIT_FOREVER);
+    Task_sleep(5);
     i2c.readCount = 1;
     i2c.writeCount = 1;
     writeBuffer[0] = INT_STATUS1;
     if (!I2C_transfer(handle, &i2c))
         System_abort("Unsuccessful I2C transfer!");
 
-    System_printf("INTERRUPT --- INT_STATUS1: %x\n",readBuffer[0]);
-    System_flush();
+    //System_printf("INTERRUPT --- INT_STATUS1: %x\n",readBuffer[0]);
+    //System_flush();
 
     i2c.readCount = 1;
     i2c.writeCount = 1;
@@ -258,9 +266,83 @@ void getHeartRate()
     if (!I2C_transfer(handle, &i2c))
         System_abort("Unsuccessful I2C transfer!");
 
-    System_printf("INTERRUPT --- INT_STATUS2: %x\n",readBuffer[0]);
+    //System_printf("INTERRUPT --- INT_STATUS2: %x\n",readBuffer[0]);
+    //System_flush();
+
+    //-- FIFO --
+
+   i2c.readCount = 1;
+    i2c.writeCount = 1;
+    writeBuffer[0] = FIFO_WR_PTR;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+
+    wrPtr = readBuffer[0];
+    //System_printf("FIFO_WR_PTR: %x\n",wrPtr);
+    //System_flush();
+
+    i2c.readCount = 1;
+    i2c.writeCount = 1;
+    writeBuffer[0] = FIFO_RD_PTR;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+    rdPtr = readBuffer[0];
+    //System_printf("FIFO_RD_PTR: %x\n",rdPtr);
+    //System_flush();
+
+    sampleNum = wrPtr - rdPtr;
+    //System_printf("sapleNum: %x\n",sampleNum);
+    //System_flush();
+
+
+    for (i = 0; i < sampleNum; ++i ){
+
+    i2c.readCount = 3;
+    i2c.writeCount = 1;
+    writeBuffer[0] = FIFO_DATA;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+    temp[3] = 0;
+    temp[2] = readBuffer[0] & 0x03;
+    temp[1] = readBuffer[1];
+    temp[0] = readBuffer[2];
+
+    //System_printf("Temp0: %x Temp1: %x Temp2: %x Temp3: %x Temp4: %x Temp5: %x Temp6: %x Temp7: %x\n",readBuffer[0],readBuffer[1],readBuffer[2],readBuffer[3],readBuffer[4],readBuffer[5],readBuffer[6],readBuffer[7]);
+    //System_printf("Temp0: %x Temp1: %x Temp2: %x --- %x%x%x ----- %x%x%x\n",temp[0],temp[1],temp[2],temp[2],temp[1],temp[0],temp[0],temp[1],temp[2]);
+    //System_printf("%x%x%x\n",temp[2],temp[1],temp[0]);
+    //System_flush();
+
+
+    memcpy(&red_val, temp, 4);
+    red_avg += red_val;
+    //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x -FIFO_DATA 3: %x -FIFO_DATA 4: %x \n",readBuffer[0],readBuffer[1],readBuffer[2],readBuffer[3],readBuffer[4]);
+    //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x\nCALC: %x\n",readBuffer[0],readBuffer[1],readBuffer[2],red_val);
+    System_printf("CALC: %x -- %d -- SampleNum: %d ",red_val,red_val,sampleNum);
     System_flush();
 
+    if (red_val > old_val)
+        System_printf("UP\n");
+    else
+        System_printf("DOWN\n");
+
+    System_flush();
+    old_val = red_val;
+
+
+
+    /*i2c.readCount = 1;
+    i2c.writeCount = 1;
+    writeBuffer[0] = FIFO_RD_PTR;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+    rdPtr = readBuffer[0];
+    System_printf("FIFO_RD_PTR: %x\n",rdPtr);
+    System_flush();*/
+    }
+    red_avg /= sampleNum;
+    //System_printf("Red_avg: %x\n",red_avg);
+    //System_printf("sapleNum: %x\n",sampleNum);
+    //System_flush();
 
 
     /*
@@ -310,8 +392,8 @@ void clearFIFO(){
 
 void Isr()
 {
-    System_printf("ISR TRIGGERED\n");
-    System_flush();
+    //System_printf("ISR TRIGGERED\n");
+    //System_flush();
 
     //TODO check which Interrupt got triggered
     //... cannot read I2C here :( need function which waits for every interrupt...

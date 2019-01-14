@@ -53,7 +53,7 @@ void HeartRateFxn(UArg arg0, UArg arg1){
     while(1){
         //temp = getTemp();
         //Mailbox_post(mbox_input,&temp,BIOS_WAIT_FOREVER);
-        Task_sleep(1000);
+        Task_sleep(5);
         getHeartRate();
     }
 

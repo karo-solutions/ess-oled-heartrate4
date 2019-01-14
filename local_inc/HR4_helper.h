@@ -23,12 +23,13 @@
 #define MODE_SPO2 0x03
 #define MODE_MULTILED 0x07
 #define SPO2_CONF_REG 0x0A
-#define SPO2_SR 0x1C
+#define SPO2_SR 0x18
 #define SPO2_SR_MASK 0xE3
 #define RESET 0x40
 #define RESET_MASK 0xBF
 #define FIFO_CONF 0x08
-#define SMP_AVG 0xA0
+//#define SMP_AVG 0xA0
+#define SMP_AVG 0x40
 #define SMP_AVG_MASK 0x1F
 #define FIFO_A_FULL 0x02
 #define FIFO_A_FULL_MASK 0xF0
@@ -37,6 +38,7 @@
 #define FIFO_WR_PTR 0x04
 #define OVF_COUNTER 0x05
 #define FIFO_RD_PTR 0x06
+#define FIFO_DATA 0x07
 #define INT_STATUS1 0x00
 #define INT_STATUS2 0x01
 #define INT_ENABLE1 0x02
