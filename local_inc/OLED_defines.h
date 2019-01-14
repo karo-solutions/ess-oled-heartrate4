@@ -1,12 +1,14 @@
 /*
- * helper for OLED_C SEPS114A rev 1.0
+ * defines for OLED_C Click
+ * controller SEPS114A
  */
 
 #ifndef OLED_DEFINES_H_
 #define OLED_DEFINES_H_
 
-////////////////////////////////////////////////////
-/*Board defines*/
+/*
+ * GPIO defines
+ */
 #define Display_Soft_Reset_LOW 0x00
 #define Display_Soft_Reset_HIGH 0xFF
 
@@ -25,8 +27,10 @@
 #define SYSCTL_PERIPH_RW SYSCTL_PERIPH_GPIOE
 #define RW_PORT GPIO_PORTE_BASE
 #define RW_PIN GPIO_PIN_4
-///////////////////////////////////////////////////////
 
+/*
+ * value defines
+ */
 #define BLUE 0x01F
 #define WHITE 0xFFFF
 #define start_left 0
@@ -43,8 +47,9 @@
 #define disp_y_min 0x00
 #define disp_y_max 0x5F
 
-///////////////////////////////////////////////////////
-/*OLED Adress defines*/
+/*
+ * OLED Adress defines
+ */
 #define SOFT_RESET 0x01
 #define DISPLAY_ON_OFF 0x02
 #define ANALOG_CONTROL 0x0F
@@ -86,6 +91,6 @@
 #define RGB_IF 0xE0
 #define RGB_POL 0xE1
 #define DISPLAY_MODE_CONTROL 0xE5
-//////////////////////////////////////////////////////////
+
 
 #endif

@@ -62,6 +62,10 @@ void oled_command(uint8_t cmd, uint8_t data)
     System_printf("Write to Register\n");
 }
 
+/**
+ * write data to the OLED DDRAM
+ * @param data_value 16 bit color value of the pixel
+ */
 void oled_data(uint16_t data_value)
 {
     GPIOPinWrite(CS_PORT, CS_PIN, 0);       //Chip select to LOW
@@ -70,9 +74,13 @@ void oled_data(uint16_t data_value)
     GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);  //Chip select to HIGH
 }
 
+/**
+ *  Initialize OLED Controller with default values
+ *
+ */
 void oled_init()
 {
-    /**
+    /*
      *  OLED hardware reset
      *  resets the Display via RST pin
      */
@@ -160,6 +168,11 @@ void DDRAM_access()
     System_printf("DDRAM_access\n");
 }
 
+/**
+ * set memory area(address) to write a display data
+ * @param X coordinate
+ * @param Y coordinate
+ */
 void oled_MemorySize(char X1, char X2, char Y1, char Y2)
 {
     oled_command(MEM_X1, X1);
@@ -169,6 +182,9 @@ void oled_MemorySize(char X1, char X2, char Y1, char Y2)
     System_printf("Memory Size\n");
 }
 
+/**
+ * set background color
+ */
 void oled_Background()
 {
     unsigned int j;
@@ -184,9 +200,20 @@ void oled_Background()
     }
 }
 
-void oled_Ausgabe(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
-                  uint8_t font_size_y, uint16_t font_color, uint16_t bg_color,
-                  char draw_me, char *font_array)
+/**
+ * set oled_output parameter
+ * @param start_x set column start
+ * @param start_y set row start
+ * @param font_size_x set font width
+ * @param font_size_y set font hight
+ * @param font_color set font color
+ * @param bg_color set font background color
+ * @param draw_me string print
+ * @param *font_array font define
+ */
+void oled_output(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
+                 uint8_t font_size_y, uint16_t font_color, uint16_t bg_color,
+                 char draw_me, char *font_array)
 {
     int i, j;
     oled_MemorySize(start_x, start_x + font_size_x - 1, start_y,
@@ -205,61 +232,76 @@ void oled_Ausgabe(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
     System_printf("OLED Ausgabe\n");
 }
 
-//void oled_Ausgabe()
-
-void oled_Fxn(UArg arg0)
+/**
+ * print output
+ * @param arg0
+ * @param arg1
+ */
+void oled_Fxn(UArg arg0, UArg arg1)
 {
-    ownSpiInit();
-
+    struct werte
+    {
+        float temp = 22,1;
+        float
+    };
     uint8_t i, column;
-    char tempstring[] = "C-Temp:", pulsstring[] = "Puls:", spo2string[] = "SpO2:";
-    oled_init();
-    System_printf("init done\n");
-    System_flush();
 
-    oled_command(MEMORY_WRITE_READ, 0x02); //Set Memory Read/Write mode
+    ownSpiInit();
+    oled_init();
+    oled_command(MEMORY_WRITE_READ, 0x02);           //Set Memory Read/Write mod
     oled_MemorySize(disp_x_min, disp_x_max, disp_y_min, disp_y_max);
     DDRAM_access();
     oled_Background();
+
+    char tempstring[] = "Temp:", pulsstring[] = "Puls:", spo2string[] = "SpO2:";
+    System_flush();
 
     //write tempstring to display
     column = start_left;
     for (i = 0; i < sizeof(tempstring); i++)
     {
-        oled_Ausgabe(column, row_TEMP, font_width, font_hight, WHITE, BLUE, tempstring[i],
-                     (char*) font2);
+        oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
+                    tempstring[i], (char*) font2);
         column += 0x08;
     }
+   /* while (1)
+    {
 
+    }*/
+///////////////////////////////////////////////////////////////////////////////////////////////
     //write pulsstring to display
     column = start_left;
     for (i = 0; i < sizeof(pulsstring); i++)
     {
-        oled_Ausgabe(column, row_PULS, font_width, font_hight, WHITE, BLUE, pulsstring[i],
-                     (char*) font2);
+        oled_output(column, row_PULS, font_width, font_hight, WHITE, BLUE,
+                    pulsstring[i], (char*) font2);
         column += 0x08;
     }
+    /*while (1)
+    {
 
+    }*/
+/////////////////////////////////////////////////////////////////////////////////////////////////
     //write spo2string to display
     column = start_left;
     for (i = 0; i < sizeof(spo2string); i++)
     {
-        oled_Ausgabe(column, row_SPO2, font_width, font_hight, WHITE, BLUE, spo2string[i],
-                     (char*) font2);
+        oled_output(column, row_SPO2, font_width, font_hight, WHITE, BLUE,
+                    spo2string[i], (char*) font2);
         column += 0x08;
     }
-    System_printf("OLED Fxn\n");
+    /*while (1)
+    {
 
+    }*/
 }
 
-/*
+/**
  * SPI Setup
  */
 void ownSpiInit()
 {
-
     /* Initialize SPI handle as default master */
-
     SysCtlPeripheralEnable(SYSCTL_PERIPH_CS);
     GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
 
@@ -283,6 +325,11 @@ void ownSpiInit()
     }
 }
 
+/**
+ * setup Oled Task
+ * @param arg0
+ * @param arg1
+ */
 int setup_OLED_Task(UArg arg0, UArg arg1)
 {
     Task_Params taskSPIParams;
@@ -290,8 +337,8 @@ int setup_OLED_Task(UArg arg0, UArg arg1)
     Error_Block eb;
     Error_init(&eb);
     Task_Params_init(&taskSPIParams);
-    taskSPIParams.stackSize = 1024; /* stack in bytes */
-    taskSPIParams.priority = 15; /* 0-15 (15 is highest priority on default -> see RTOS Task configuration) */
+    taskSPIParams.stackSize = 1024;             // stack in bytes
+    taskSPIParams.priority = 15; // 0-15 (15 is highest priority on default -> see RTOS Task configuration)
     taskSPIParams.arg0 = 0;
     taskSPI = Task_create((Task_FuncPtr) oled_Fxn, &taskSPIParams, &eb);
     if (taskSPI == NULL)
@@ -304,6 +351,10 @@ int setup_OLED_Task(UArg arg0, UArg arg1)
     }
 }
 
+/**
+ * set spi mode
+ * @param byte value for transfer
+ */
 void SPI_write(uint16_t byte)
 {
     SPI_Transaction masterTransaction;
@@ -315,7 +366,6 @@ void SPI_write(uint16_t byte)
 
     /* Initiate SPI transfer */
     transferOK = SPI_transfer(masterSpi, &masterTransaction);
-
     if (transferOK)
     {
     }
