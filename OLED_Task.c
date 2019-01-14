@@ -50,19 +50,19 @@ void oled_command(uint16_t reg_index, uint16_t reg_value)
     System_printf("Select Index Addres\n");
 
     //write to reg
-    GPIOPinWrite(CS_PORT, CS_PIN, 0x00);
-    GPIOPinWrite(DC_PORT, DC_PIN, DC_PIN);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);
+    GPIOPinWrite(DC_PORT, DC_PIN, 0xFF);
     SPI_write(reg_value);
-    GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
     System_printf("Write to Register\n");
 }
 
 void oled_data(uint16_t data_value)
 {
-    GPIOPinWrite(CS_PORT, CS_PIN, 0x00);
-    GPIOPinWrite(DC_PORT, DC_PIN, DC_PIN);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);
+    GPIOPinWrite(DC_PORT, DC_PIN, 0xFF);
     SPI_write(data_value);
-    GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
 }
 
 void oled_init()
@@ -137,10 +137,10 @@ void oled_init()
 
 void DDRAM_access()
 {
-    GPIOPinWrite(CS_PORT, CS_PIN, 0x00);
-    GPIOPinWrite(DC_PORT, DC_PIN, 0x00);
-    SPI_write(RAM_DATA_ACCESS_PORT);
-    GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0);
+    GPIOPinWrite(DC_PORT, DC_PIN, 0);
+    SPI_write(0x08);
+    GPIOPinWrite(CS_PORT, CS_PIN, 0xFF);
     System_printf("DDRAM_access\n");
 }
 
@@ -189,23 +189,23 @@ void oled_Ausgabe(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
     System_printf("OLED Ausgabe\n");
 }
 
-void oled_Fxn(UArg arg0)
+void oled_Fxn(UArg arg0, UArg arg1)
 {
     onwSpiInit();
 
     uint8_t i, x_val = 0;
-    char displaystring[] = "KOMISCH!!";
+    char displaystring[] = "Dere, Pat!!!";
     oled_init();
     System_printf("init done\n");
     System_flush();
 
-    oled_command(MEMORY_WRITE_READ, 0x02);          //Set Memory Read/Write mode
+    oled_command(0x1D, 0x02); //Set Memory Read/Write mode
     oled_MemorySize(0x00, 0x5F, 0x00, 0x5F);
     DDRAM_access();
     oled_Background();
     for (i = 0; i < sizeof(displaystring); i++)
     {
-        oled_Ausgabe(x_val, 0x06, 0x08, 0xC, 0xFFFF, 0x0000, displaystring[i],
+        oled_Ausgabe(x_val, 0x00, 0x08, 0xC, 0xFFFF, 0x0000, displaystring[i],
                      (char*) font2);
         x_val += 0x08;
     }
@@ -221,8 +221,8 @@ void onwSpiInit()
 
     /* Initialize SPI handle as default master */
 
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_CS);
-    GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOH);
+    GPIOPinTypeGPIOOutput(GPIO_PORTH_BASE, CS_PIN);
 
     SPI_Params spiParams;
 
@@ -231,7 +231,7 @@ void onwSpiInit()
     spiParams.transferCallbackFxn = NULL;
     spiParams.frameFormat = SPI_POL1_PHA1;    //Polarität und Phasenverschiebung
     spiParams.bitRate = 1000000;
-    spiParams.dataSize = 8;
+    spiParams.dataSize = 16;
 
     masterSpi = SPI_open(Board_SPI0, &spiParams);
     if (masterSpi == NULL)
@@ -284,25 +284,4 @@ void SPI_write(uint16_t data)
     {
         System_printf("Unsuccessful master SPI transfer");
     }
-}
-
-void to_string(uint16_t precomma, uint8_t postcomma, char* buffer){ //incoming data to string convert, so that i can print this on my display you know
-    uint8_t i=0,j=0;
-    do{
-        buffer[i++] = precomma%10+'0';
-        precomma=precomma/10;
-    }while(precomma!=0);
-
-    for(j = 0; j < i/2; j++){
-        buffer[j] ^= buffer[i-j-1];
-        buffer[i-j-1] ^= buffer[j];
-        buffer[j] ^= buffer[i-j-1];
-    }
-
-    /*if(x == frq){
-        buffer[i] = ',';
-        buffer[++i] = postcomma+'0';
-        buffer[++i] = '\0';
-    }
-    else buffer[i] = '\0';*/
 }

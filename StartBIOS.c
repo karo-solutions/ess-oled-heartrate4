@@ -68,9 +68,10 @@ int main(void)
     //CS
     GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
     //DC
-    GPIOPinTypeGPIOOutput(PWM_PORT, PWM_PIN);
+    GPIOPinTypeGPIOOutput(DC_PORT, DC_PIN);
 
     setup_OLED_Task(0,0);
+
     //setup_HeartRate_Task(0,0);
 
     /*initMailbox();
