@@ -192,10 +192,10 @@ void bitSet(uint8_t addr, uint8_t mask, uint8_t value)
 
 }
 
-int getTemp()
+float getTemp()
 {
     uint8_t ret_tint, ret_tfrac;
-    uint16_t frac;
+    float frac;
 
     writeBuffer[0] = TEMP_EN;
     writeBuffer[1] = 0x01;
@@ -223,13 +223,14 @@ int getTemp()
         System_abort("Unsuccessful I2C transfer!");
 
     ret_tfrac = readBuffer[0];
-    frac = (ret_tfrac * 625);
+    frac = (ret_tfrac * 0.0625);
+    frac += ret_tint;
 
-    System_printf("TINT: %d   ---  TFRAC: %d  --  Calculated Temperature: %d.%d \n",ret_tint,ret_tfrac,ret_tint,frac);
+    System_printf("TINT: %d   ---  TFRAC: %d\n",ret_tint,readBuffer[0]);
     //System_printf("Calculated Temperature: %d.%d \n", ret_tint, frac);
     System_flush();
 
-    return ret_tint;
+    return frac;
 }
 
 void getHeartRate()

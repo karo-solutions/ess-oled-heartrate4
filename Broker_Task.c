@@ -52,13 +52,12 @@ void BrokerFxn(UArg arg0, UArg arg1){
     Mailbox_Handle mbox_uart_out = (Mailbox_Handle)broker_mboxes->mbox_uart_out;
     Mailbox_Handle mbox_uart_in = (Mailbox_Handle)broker_mboxes->mbox_uart_in;
 
-    uint32_t temp;
-
     System_printf("Broker_Task created!\n");
     System_flush();
 
 
     while(1){
+        mbox_data.temp = 500;
         Mailbox_pend(mbox_input,&mbox_data, 500);
         Mailbox_pend(mbox_uart_in,&mbox_uart_in_data,100);
         if (mbox_uart_in_data.mode == 1){
@@ -69,7 +68,7 @@ void BrokerFxn(UArg arg0, UArg arg1){
             writeModeFlag = mbox_uart_in_data.messagecount;
             mbox_uart_in_data.mode = 0;
         }
-        if (mbox_data.temp == -1){
+        if (mbox_data.temp == 500){
 
         }
         else{
@@ -78,7 +77,6 @@ void BrokerFxn(UArg arg0, UArg arg1){
                 Mailbox_post(mbox_uart_out,&mbox_data,500);
                 readModeFlag--;
             }
-            mbox_data.temp = -1;
         }
 
 
