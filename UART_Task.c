@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inc/hw_memmap.h>
+#include <math.h>
 
 /* XDCtools Header files */
 #include <xdc/std.h>
@@ -58,9 +59,10 @@ void UARTFxn(UArg arg0, UArg arg1)
     uint16_t ret;
     long entry;
     const char echoPrompt[] = "------------------------------------MENU------------------------------------------\r\n(1) For ReadMode\r\n(2) For WriteMode\r\n";
-    const char errorPromt[] = "ENTER NUMBERS ONLY!\r\n";
+    const char errorPrompt[] = "ENTER NUMBERS ONLY!\r\n";
+    const char tempPrompt[] = "Temp: ";
     const char countPrompt[] = "How many messages do you want to read/write?\r\n";
-    const char fakeDataPromt[] = "Enter Fake-Data!";
+    const char fakeDataPrompt[] = "Enter Fake Data!";
 
     /* Create a UART with data processing off. */
     UART_Params_init(&uartParams);
@@ -82,12 +84,22 @@ void UARTFxn(UArg arg0, UArg arg1)
         UART_write(uart, echoPrompt, sizeof(echoPrompt));
         //char input;
 
-        /*uint8_t ret;
-        char buffer[64];
-        float myFloat = -35.993;
-        ret = snprintf(buffer, sizeof buffer, "%f", myFloat);
-        UART_write(uart, &buffer, ret-3);*/
+        //int8_t temp = 5;
 
+        //ret = sprintf (buffer, "Temp: %d\n", temp);
+        //ret = snprintf(buffer, sizeof buffer, "Temp: %d", temp);
+        //System_printf("TEST: %s\n",buffer);
+        //System_flush();
+        //UART_write(uart, &buffer, ret);
+
+
+
+        //uint8_t ret;
+        //char buffer[64];
+        //float myFloat = -35.993;
+        //ret = snprintf(buffer, sizeof buffer, "%f", myFloat);
+        //sprintf(buffer, "TEST: %f", myFloat);
+        //UART_write(uart, &buffer, ret-3);
         UART_read(uart, &buffer, 64);
         entry = strtol(buffer,&ptr,10);
         switch(entry) {
@@ -100,9 +112,9 @@ void UARTFxn(UArg arg0, UArg arg1)
             Mailbox_post(mbox_uart_in,&mbox_uart_in_data,100);
             for (i = 0; i < entry; ++i ){
                 Mailbox_pend(mbox_uart_out,&mbox_data,BIOS_WAIT_FOREVER);
-                //ret = snprintf(buffer, sizeof buffer, "%d", mbox_data.temp);
-                //UART_write(uart, &buffer, ret);
-                System_printf("Received Temp: %d\n",mbox_data.temp);
+                ret = snprintf(buffer, sizeof buffer, "Temp: %.3f\n", mbox_data.temp);
+                UART_write(uart, &buffer, ret-3);
+                System_printf("LOOP\n");
                 System_flush();
             }
             break;
@@ -113,7 +125,7 @@ void UARTFxn(UArg arg0, UArg arg1)
             break;
 
         default:
-            UART_write(uart, errorPromt, sizeof(errorPromt));
+            UART_write(uart, errorPrompt, sizeof(errorPrompt));
         }
         //if (strtol()==0){
 
@@ -152,7 +164,7 @@ int setup_UART_Task(UArg mbox_uart_out, UArg mbox_uart_in)
         
     Error_init(&eb);
     Task_Params_init(&taskUARTParams);
-    taskUARTParams.stackSize = 1024; /* stack in bytes */
+    taskUARTParams.stackSize = 2048; /* stack in bytes */
     taskUARTParams.priority = 15; /* 0-15 (15 is highest priority on default -> see RTOS Task configuration) */
     taskUARTParams.arg0 = (UArg) mbox_uart_out;
     taskUARTParams.arg1 = (UArg) mbox_uart_in;

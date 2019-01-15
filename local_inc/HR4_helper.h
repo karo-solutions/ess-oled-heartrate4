@@ -54,7 +54,7 @@
 #define INT_A_FULL 0x80
 #define INT_A_FULL_MASK 0x7F
 
-int getTemp();
+float getTemp();
 void HR4_setup();
 void getHeartRate();
 void clearFIFO();
