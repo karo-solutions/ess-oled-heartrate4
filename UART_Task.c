@@ -55,10 +55,11 @@ void UARTFxn(UArg arg0, UArg arg1)
     char *ptr;
     uint8_t readsize;
     uint16_t i;
+    uint16_t ret;
     long entry;
-    const char echoPrompt[] = "------------------------------------MENU------------------------------------------\r\n(1) For ReadMode\r\n";
+    const char echoPrompt[] = "------------------------------------MENU------------------------------------------\r\n(1) For ReadMode\r\n(2) For WriteMode\r\n";
     const char errorPromt[] = "ENTER NUMBERS ONLY!\r\n";
-    const char readModePrompt[] = "How many messages do you want to read?\r\n";
+    const char countPrompt[] = "How many messages do you want to read/write?\r\n";
     const char fakeDataPromt[] = "Enter Fake-Data!";
 
     /* Create a UART with data processing off. */
@@ -91,7 +92,7 @@ void UARTFxn(UArg arg0, UArg arg1)
         entry = strtol(buffer,&ptr,10);
         switch(entry) {
         case 1 :
-            UART_write(uart, readModePrompt, sizeof(readModePrompt));
+            UART_write(uart, countPrompt, sizeof(countPrompt));
             UART_read(uart, &buffer, 64);
             entry = strtol(buffer,&ptr,10);
             mbox_uart_in_data.mode = 1;
@@ -99,11 +100,11 @@ void UARTFxn(UArg arg0, UArg arg1)
             Mailbox_post(mbox_uart_in,&mbox_uart_in_data,100);
             for (i = 0; i < entry; ++i ){
                 Mailbox_pend(mbox_uart_out,&mbox_data,BIOS_WAIT_FOREVER);
-
-
+                //ret = snprintf(buffer, sizeof buffer, "%d", mbox_data.temp);
+                //UART_write(uart, &buffer, ret);
+                System_printf("Received Temp: %d\n",mbox_data.temp);
+                System_flush();
             }
-            System_printf("unoooo\n");
-            System_flush();
             break;
 
         case 2:

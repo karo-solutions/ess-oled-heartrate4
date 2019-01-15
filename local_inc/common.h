@@ -17,7 +17,7 @@ struct mbox_data {
 struct mbox_uart_in_data {
     uint8_t mode;
     uint8_t messagecount;
-    uint8_t temp;
+    int8_t temp;
     uint8_t heartrate;
     float spo;
 };

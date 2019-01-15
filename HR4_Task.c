@@ -57,7 +57,7 @@ void HeartRateFxn(UArg arg0, UArg arg1){
         mbox_data.heartrate = 60;
         mbox_data.spo = 95.3;
         //temp = getTemp();
-        //Mailbox_post(mbox_input,&mbox_data,BIOS_WAIT_FOREVER);
+        Mailbox_post(mbox_input,&mbox_data,BIOS_WAIT_FOREVER);
         Task_sleep(5000);
         //getHeartRate();
     }

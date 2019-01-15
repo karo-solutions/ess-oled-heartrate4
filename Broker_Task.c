@@ -44,7 +44,9 @@ void BrokerFxn(UArg arg0, UArg arg1){
     struct mbox_data mbox_data;
     struct mbox_uart_in_data mbox_uart_in_data;
     struct broker_mboxes *broker_mboxes = (struct broker_mboxes *)arg0;
-    uint8_t readModeFlag;
+    uint8_t readModeFlag = 0;
+    uint8_t writeModeFlag = 0;
+    uint8_t i;
     Mailbox_Handle mbox_input = (Mailbox_Handle)broker_mboxes->mbox_input;
     Mailbox_Handle mbox_output = (Mailbox_Handle)broker_mboxes->mbox_output;
     Mailbox_Handle mbox_uart_out = (Mailbox_Handle)broker_mboxes->mbox_uart_out;
@@ -58,25 +60,41 @@ void BrokerFxn(UArg arg0, UArg arg1){
 
     while(1){
         Mailbox_pend(mbox_input,&mbox_data, 500);
-        if (mbox_data.temp == 0xFF){
+        Mailbox_pend(mbox_uart_in,&mbox_uart_in_data,100);
+        if (mbox_uart_in_data.mode == 1){
+            readModeFlag = mbox_uart_in_data.messagecount;
+            mbox_uart_in_data.mode = 0;
+        }
+        if (mbox_uart_in_data.mode == 2){
+            writeModeFlag = mbox_uart_in_data.messagecount;
+            mbox_uart_in_data.mode = 0;
+        }
+        if (mbox_data.temp == -1){
 
         }
         else{
             Mailbox_post(mbox_output,&mbox_data,500);
-            Mailbox_post(mbox_uart_out,&mbox_data,100);
+            if (readModeFlag > 0){
+                Mailbox_post(mbox_uart_out,&mbox_data,500);
+                readModeFlag--;
+            }
+            mbox_data.temp = -1;
         }
 
-        Mailbox_pend(mbox_uart_in,&mbox_uart_in_data,100);
-        if (mbox_uart_in_data.mode == 1){
-            readModeFlag = mbox_uart_in_data.messagecount;
-            System_printf("READ MODE ACTIVATED -> 1! will read %d times\n",readModeFlag);
-            System_flush();
-            readModeFlag = mbox_uart_in_data.messagecount;
 
-        ///foreach(&mbox_uart_in_data.messagecount)
-        //Mailbox_pend(mbox_uart_in,&mbox_uart_in_data,BIOS_WAIT_FOREVER)
-        //
+        if (writeModeFlag > 0){
+            for (i = 0; i < writeModeFlag; ++i ){
+                Mailbox_pend(mbox_uart_in,&mbox_uart_in_data,BIOS_WAIT_FOREVER);
+                mbox_data.temp = mbox_uart_in_data.temp;
+                mbox_data.heartrate = mbox_uart_in_data.heartrate;
+                mbox_data.spo = mbox_uart_in_data.spo;
+                Mailbox_post(mbox_output,&mbox_data,BIOS_WAIT_FOREVER);
+            }
+            writeModeFlag = 0;
+
         }
+
+
 
 
         //System_printf("Broker MBOX triggered\n Temp: %d\n",mbox_data.temp);
