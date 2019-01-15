@@ -239,11 +239,10 @@ void oled_output(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
  */
 void oled_Fxn(UArg arg0, UArg arg1)
 {
-    struct werte
-    {
-        float temp = 22,1;
-        float
-    };
+
+
+    //System_printf("%3f", &werte_ausgabe->flt);
+
     uint8_t i, column;
 
     ownSpiInit();
@@ -252,6 +251,13 @@ void oled_Fxn(UArg arg0, UArg arg1)
     oled_MemorySize(disp_x_min, disp_x_max, disp_y_min, disp_y_max);
     DDRAM_access();
     oled_Background();
+
+
+    /*char buffer[50];
+    float a = 1.234;
+    int ret = snprintf(buffer, 5, "%3f", a);
+
+    System_printf("\n%s\n%d", buffer, ret);*/
 
     char tempstring[] = "Temp:", pulsstring[] = "Puls:", spo2string[] = "SpO2:";
     System_flush();
@@ -264,11 +270,32 @@ void oled_Fxn(UArg arg0, UArg arg1)
                     tempstring[i], (char*) font2);
         column += 0x08;
     }
-   /* while (1)
-    {
 
+    /*for (i = 0; i < sizeof(buffer); i++)
+    {
+        oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
+                    buffer[i], (char*) font2);
+        column += 0x08;
     }*/
-///////////////////////////////////////////////////////////////////////////////////////////////
+
+    /*while (1)
+    {
+        int ret;
+
+        ret = snprintf(buffer[], sizeof buffer, "%3f", asdf);
+
+        if (ret >= sizeof buffer)
+        {
+            for (i = 0; i < sizeof(buffer); i++)
+            {
+                oled_output(column, row_TEMP, font_width, font_hight, WHITE,
+                BLUE, buffer[i], (char*) font2);
+                column += 0x08;
+            }
+        }
+    }*/
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     //write pulsstring to display
     column = start_left;
     for (i = 0; i < sizeof(pulsstring); i++)
@@ -278,10 +305,10 @@ void oled_Fxn(UArg arg0, UArg arg1)
         column += 0x08;
     }
     /*while (1)
-    {
+     {
 
-    }*/
-/////////////////////////////////////////////////////////////////////////////////////////////////
+     }*/
+    /////////////////////////////////////////////////////////////////////////////////////////////////
     //write spo2string to display
     column = start_left;
     for (i = 0; i < sizeof(spo2string); i++)
@@ -291,38 +318,39 @@ void oled_Fxn(UArg arg0, UArg arg1)
         column += 0x08;
     }
     /*while (1)
-    {
+     {
 
-    }*/
+     }*/
 }
+
 
 /**
  * SPI Setup
  */
 void ownSpiInit()
 {
-    /* Initialize SPI handle as default master */
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_CS);
-    GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
+/* Initialize SPI handle as default master */
+SysCtlPeripheralEnable(SYSCTL_PERIPH_CS);
+GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
 
-    SPI_Params spiParams;
+SPI_Params spiParams;
 
-    SPI_Params_init(&spiParams);
-    spiParams.transferMode = SPI_MODE_BLOCKING;
-    spiParams.transferCallbackFxn = NULL;
-    spiParams.frameFormat = SPI_POL1_PHA1;    //Polarität und Phasenverschiebung
-    spiParams.bitRate = 1000000;
-    spiParams.dataSize = 16;
+SPI_Params_init(&spiParams);
+spiParams.transferMode = SPI_MODE_BLOCKING;
+spiParams.transferCallbackFxn = NULL;
+spiParams.frameFormat = SPI_POL1_PHA1;    //Polarität und Phasenverschiebung
+spiParams.bitRate = 1000000;
+spiParams.dataSize = 16;
 
-    masterSpi = SPI_open(Board_SPI0, &spiParams);
-    if (masterSpi == NULL)
-    {
-        System_abort("Error initializing SPI\n");
-    }
-    else
-    {
-        System_printf("SPI initialized\n");
-    }
+masterSpi = SPI_open(Board_SPI0, &spiParams);
+if (masterSpi == NULL)
+{
+    System_abort("Error initializing SPI\n");
+}
+else
+{
+    System_printf("SPI initialized\n");
+}
 }
 
 /**
@@ -332,23 +360,23 @@ void ownSpiInit()
  */
 int setup_OLED_Task(UArg arg0, UArg arg1)
 {
-    Task_Params taskSPIParams;
-    Task_Handle taskSPI;
-    Error_Block eb;
-    Error_init(&eb);
-    Task_Params_init(&taskSPIParams);
-    taskSPIParams.stackSize = 1024;             // stack in bytes
-    taskSPIParams.priority = 15; // 0-15 (15 is highest priority on default -> see RTOS Task configuration)
-    taskSPIParams.arg0 = 0;
-    taskSPI = Task_create((Task_FuncPtr) oled_Fxn, &taskSPIParams, &eb);
-    if (taskSPI == NULL)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+Task_Params taskSPIParams;
+Task_Handle taskSPI;
+Error_Block eb;
+Error_init(&eb);
+Task_Params_init(&taskSPIParams);
+taskSPIParams.stackSize = 1024;             // stack in bytes
+taskSPIParams.priority = 15; // 0-15 (15 is highest priority on default -> see RTOS Task configuration)
+taskSPIParams.arg0 = 0;
+taskSPI = Task_create((Task_FuncPtr) oled_Fxn, &taskSPIParams, &eb);
+if (taskSPI == NULL)
+{
+    return 1;
+}
+else
+{
+    return 0;
+}
 }
 
 /**
@@ -357,20 +385,20 @@ int setup_OLED_Task(UArg arg0, UArg arg1)
  */
 void SPI_write(uint16_t byte)
 {
-    SPI_Transaction masterTransaction;
-    bool transferOK;
+SPI_Transaction masterTransaction;
+bool transferOK;
 
-    masterTransaction.count = 1;
-    masterTransaction.txBuf = (Ptr) &byte;
-    masterTransaction.rxBuf = NULL;
+masterTransaction.count = 1;
+masterTransaction.txBuf = (Ptr) &byte;
+masterTransaction.rxBuf = NULL;
 
-    /* Initiate SPI transfer */
-    transferOK = SPI_transfer(masterSpi, &masterTransaction);
-    if (transferOK)
-    {
-    }
-    else
-    {
-        System_printf("Unsuccessful master SPI transfer");
-    }
+/* Initiate SPI transfer */
+transferOK = SPI_transfer(masterSpi, &masterTransaction);
+if (transferOK)
+{
+}
+else
+{
+    System_printf("Unsuccessful master SPI transfer");
+}
 }
