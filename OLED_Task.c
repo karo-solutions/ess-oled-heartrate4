@@ -363,7 +363,7 @@ Task_Handle taskSPI;
 Error_Block eb;
 Error_init(&eb);
 Task_Params_init(&taskSPIParams);
-taskSPIParams.stackSize = 1024;             // stack in bytes
+taskSPIParams.stackSize = 2048;             // stack in bytes
 taskSPIParams.priority = 15; // 0-15 (15 is highest priority on default -> see RTOS Task configuration)
 taskSPIParams.arg0 = 0;
 taskSPI = Task_create((Task_FuncPtr) oled_Fxn, &taskSPIParams, &eb);
