@@ -34,6 +34,7 @@
 /* Application headers */
 #include <HR4_Task.h>
 #include <HR4_helper.h>
+#include <common.h>
 
 
 
@@ -42,6 +43,7 @@
  */
 void HeartRateFxn(UArg arg0, UArg arg1){
     uint32_t temp;
+    struct mbox_data mbox_data;
 
     System_printf("HeartRate_Task created!\n");
     System_flush();
@@ -51,10 +53,13 @@ void HeartRateFxn(UArg arg0, UArg arg1){
     HR4_setup();
 
     while(1){
+        mbox_data.temp = getTemp();
+        mbox_data.heartrate = 60;
+        mbox_data.spo = 95.3;
         //temp = getTemp();
-        //Mailbox_post(mbox_input,&temp,BIOS_WAIT_FOREVER);
-        Task_sleep(5);
-        getHeartRate();
+        //Mailbox_post(mbox_input,&mbox_data,BIOS_WAIT_FOREVER);
+        Task_sleep(5000);
+        //getHeartRate();
     }
 
 

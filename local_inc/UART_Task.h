@@ -34,6 +34,6 @@ void UARTFxn(UArg arg0, UArg arg1);
  *
  *  \return always zero. In case of error the system halts.
  */
-int setup_UART_Task(void);
+int setup_UART_Task(UArg mbox_uart_out, UArg mbox_uart_in);
 
 #endif

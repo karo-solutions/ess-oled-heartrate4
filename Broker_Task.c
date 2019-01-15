@@ -32,6 +32,7 @@
 
 /* Application headers */
 #include <Broker_Task.h>
+#include <common.h>
 
 
 
@@ -39,26 +40,54 @@
  *  Setup Clock
  */
 void BrokerFxn(UArg arg0, UArg arg1){
+
+    struct mbox_data mbox_data;
+    struct mbox_uart_in_data mbox_uart_in_data;
+    struct broker_mboxes *broker_mboxes = (struct broker_mboxes *)arg0;
+    uint8_t readModeFlag;
+    Mailbox_Handle mbox_input = (Mailbox_Handle)broker_mboxes->mbox_input;
+    Mailbox_Handle mbox_output = (Mailbox_Handle)broker_mboxes->mbox_output;
+    Mailbox_Handle mbox_uart_out = (Mailbox_Handle)broker_mboxes->mbox_uart_out;
+    Mailbox_Handle mbox_uart_in = (Mailbox_Handle)broker_mboxes->mbox_uart_in;
+
     uint32_t temp;
 
     System_printf("Broker_Task created!\n");
     System_flush();
 
-    Mailbox_Handle mbox_input = (Mailbox_Handle) arg0;
-
 
     while(1){
-        Mailbox_pend(mbox_input,&temp, BIOS_WAIT_FOREVER);
+        Mailbox_pend(mbox_input,&mbox_data, 500);
+        if (mbox_data.temp == 0xFF){
 
-        System_printf("Broker MBOX triggered\n Temp: %d\n",temp);
-        System_flush();
+        }
+        else{
+            Mailbox_post(mbox_output,&mbox_data,500);
+            Mailbox_post(mbox_uart_out,&mbox_data,100);
+        }
+
+        Mailbox_pend(mbox_uart_in,&mbox_uart_in_data,100);
+        if (mbox_uart_in_data.mode == 1){
+            readModeFlag = mbox_uart_in_data.messagecount;
+            System_printf("READ MODE ACTIVATED -> 1! will read %d times\n",readModeFlag);
+            System_flush();
+            readModeFlag = mbox_uart_in_data.messagecount;
+
+        ///foreach(&mbox_uart_in_data.messagecount)
+        //Mailbox_pend(mbox_uart_in,&mbox_uart_in_data,BIOS_WAIT_FOREVER)
+        //
+        }
+
+
+        //System_printf("Broker MBOX triggered\n Temp: %d\n",mbox_data.temp);
+        //System_flush();
 
     }
 
 
 }
 
-int setup_Broker_Task(UArg mbox_input, UArg arg1) {
+int setup_Broker_Task(struct broker_mboxes *broker_mboxes) {
 
     Task_Params taskBrokerParams;
     Task_Handle taskHR;
@@ -68,7 +97,7 @@ int setup_Broker_Task(UArg mbox_input, UArg arg1) {
     Task_Params_init(&taskBrokerParams);
     taskBrokerParams.stackSize = 1024;
     taskBrokerParams.priority = 15;
-    taskBrokerParams.arg0 = (UArg) mbox_input;
+    taskBrokerParams.arg0 = (UArg)broker_mboxes;
     taskHR = Task_create((Task_FuncPtr) BrokerFxn, &taskBrokerParams, &eb);
     if (taskHR == NULL) {
         return 1;

@@ -39,14 +39,20 @@
 /* Application headers */
 #include <OLED_defines.h>
 #include <OLED_Task.h>
-//#include "UART_Task.h"
+#include <UART_Task.h>
+#include <common.h>
 
-/*void initMailbox(void);
+void initMailboxes(void);
 //Mailbox Handler
-Mailbox_Handle mbox_input;*/
+static Mailbox_Handle mbox_input;
+static Mailbox_Handle mbox_output;
+static Mailbox_Handle mbox_uart_out;
+static Mailbox_Handle mbox_uart_in;
 
 int main(void)
 {
+    static struct broker_mboxes broker_mboxes;
+
     uint32_t ui32SysClock = Board_initGeneral(120 * 1000 * 1000);
     Board_initSPI();
 
@@ -70,18 +76,16 @@ int main(void)
     //DC
     GPIOPinTypeGPIOOutput(DC_PORT, DC_PIN);
 
-    setup_OLED_Task(0,0);
+    //setup_OLED_Task(0,0);
 
-    //setup_HeartRate_Task(0,0);
-
-    /*initMailbox();
-    setup_Broker_Task((UArg) mbox_input, (UArg) 0);
+    initMailboxes();
+    broker_mboxes.mbox_input = mbox_input;
+    broker_mboxes.mbox_output = mbox_output;
+    broker_mboxes.mbox_uart_out = mbox_uart_out;
+    broker_mboxes.mbox_uart_in = mbox_uart_in;
+    setup_Broker_Task(&broker_mboxes);
     setup_HeartRate_Task((UArg) mbox_input, (UArg) 0);
-    */
-
-
-    //Initialize+start UART Task
-    //(void)setup_UART_Task();
+    setup_UART_Task((UArg) mbox_uart_out, (UArg) mbox_uart_in);
 
     System_printf("Created UART Task\n");
 
@@ -94,16 +98,34 @@ int main(void)
     BIOS_start();
 }
 
-/*void initMailbox(void)
+void initMailboxes(void)
 {
+    //struct mbox_data mbox_data;
+    //struct mbox_uart_in_data mbox_uart_in_data;
 
     Error_Block eb;
     Mailbox_Params mailboxParams;
     Mailbox_Params_init(&mailboxParams);
     Error_init(&eb);
-    mbox_input = Mailbox_create(sizeof(uint32_t), 10, &mailboxParams, &eb);
+    mbox_input = Mailbox_create(sizeof(struct mbox_data), 10, &mailboxParams, &eb);
     if (mbox_input == NULL)
         System_abort("Mailbox create failed");
+    System_printf("Created MailBox mbox_input\n");
 
-    System_printf("Created MailBox \n");
-}*/
+    mbox_output = Mailbox_create(sizeof(struct mbox_data), 10, &mailboxParams, &eb);
+    if (mbox_input == NULL)
+        System_abort("Mailbox create failed");
+    System_printf("Created MailBox mbox_output\n");
+
+
+    mbox_uart_out = Mailbox_create(sizeof(struct mbox_data), 10, &mailboxParams, &eb);
+    if (mbox_input == NULL)
+        System_abort("Mailbox create failed");
+    System_printf("Created MailBox mbox_uart_out\n");
+
+
+    mbox_uart_in = Mailbox_create(sizeof(struct mbox_uart_in_data), 10, &mailboxParams, &eb);
+    if (mbox_input == NULL)
+        System_abort("Mailbox create failed");
+    System_printf("Created MailBox mbox_uart_in\n");
+}

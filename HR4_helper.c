@@ -75,7 +75,7 @@ void HR4_setup()
     GPIO_enableInt(Board_PD4);
 
     //Enable DIE_TEMP_RDY Interrupt
-    //bitSet(INT_ENABLE2, INT_DIE_TEMP_RDY_EN_MASK, INT_DIE_TEMP_RDY_EN);
+    bitSet(INT_ENABLE2, INT_DIE_TEMP_RDY_EN_MASK, INT_DIE_TEMP_RDY_EN);
     //Enable A_FULL Interrupt
     //bitSet(INT_ENABLE1, INT_A_FULL_MASK, INT_A_FULL);
     //FIFO SMP_AVE
@@ -84,13 +84,13 @@ void HR4_setup()
     //bitSet(FIFO_CONF, FIFO_A_FULL_MASK, FIFO_A_FULL);
     bitSet(FIFO_CONF, FIFO_ROLLOVER_EN_MASK, FIFO_ROLLOVER_EN);
     //setting prox_int_en
-    bitSet(INT_ENABLE1, INT_PROX_EN_MASK, INT_PROX_EN);
+    //bitSet(INT_ENABLE1, INT_PROX_EN_MASK, INT_PROX_EN);
     //MODE_HR
     bitSet(MODE, MODE_MASK, MODE_HR);
     //SPO2 Sample Rate
     bitSet(SPO2_CONF_REG, SPO2_SR_MASK, SPO2_SR);
     //setting new fifo data int
-    bitSet(INT_ENABLE1, INT_PPG_RDY_MASK, INT_PPG_RDY);
+    //bitSet(INT_ENABLE1, INT_PPG_RDY_MASK, INT_PPG_RDY);
 
     //RED
     bitSet(LED1_PA,0,0x1F);
@@ -238,9 +238,8 @@ void getHeartRate()
     uint8_t wrPtr = 0;
     uint8_t rdPtr = 0;
     uint32_t i = 0;
-    uint32_t red_avg;
     uint32_t red_val;
-    uint32_t old_val = 0;
+    static uint32_t old_val = 0;
     uint8_t temp[4] = {0};
 
     clearFIFO();
@@ -314,16 +313,16 @@ void getHeartRate()
 
 
     memcpy(&red_val, temp, 4);
-    red_avg += red_val;
     //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x -FIFO_DATA 3: %x -FIFO_DATA 4: %x \n",readBuffer[0],readBuffer[1],readBuffer[2],readBuffer[3],readBuffer[4]);
     //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x\nCALC: %x\n",readBuffer[0],readBuffer[1],readBuffer[2],red_val);
-    System_printf("CALC: %x -- %d -- SampleNum: %d ",red_val,red_val,sampleNum);
-    System_flush();
+    //System_printf("CALC: %x -- %d -- SampleNum: %d ",red_val,red_val,sampleNum);
+    //System_flush();
 
-    if (red_val > old_val)
-        System_printf("UP\n");
-    else
-        System_printf("DOWN\n");
+
+
+
+    if ((red_val - old_val) < -50)
+        System_printf("DOWNFALL - actual: %d --- old: %d\n",red_val,old_val);
 
     System_flush();
     old_val = red_val;
@@ -339,7 +338,7 @@ void getHeartRate()
     System_printf("FIFO_RD_PTR: %x\n",rdPtr);
     System_flush();*/
     }
-    red_avg /= sampleNum;
+    //red_avg /= sampleNum;
     //System_printf("Red_avg: %x\n",red_avg);
     //System_printf("sapleNum: %x\n",sampleNum);
     //System_flush();

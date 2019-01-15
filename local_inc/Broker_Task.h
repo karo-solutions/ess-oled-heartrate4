@@ -11,8 +11,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <xdc/std.h>
+#include <common.h>
 
-int setup_Broker_Task(UArg mbox_input, UArg arg1);
+int setup_Broker_Task(struct broker_mboxes *broker_mboxes);
 void BrokerFxn(UArg arg0, UArg arg1);
 
 #endif
