@@ -253,11 +253,9 @@ void oled_Fxn(UArg arg0, UArg arg1)
     oled_Background();
 
 
-    /*char buffer[50];
+   /* char buffer[64];
     float a = 1.234;
-    int ret = snprintf(buffer, 5, "%3f", a);
-
-    System_printf("\n%s\n%d", buffer, ret);*/
+    int ret = snprintf(buffer, 5, "%3f", a);*/
 
     char tempstring[] = "Temp:", pulsstring[] = "Puls:", spo2string[] = "SpO2:";
     System_flush();
