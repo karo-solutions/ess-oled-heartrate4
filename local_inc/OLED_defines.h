@@ -34,7 +34,7 @@
 #define BLUE 0x01F
 #define WHITE 0xFFFF
 #define start_left 0
-#define column_start
+#define start_after_string 0x30
 #define font_hight 0xC
 #define font_width 0x08
 

@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <inc/hw_memmap.h>
 
 /* XDCtools Header files */
@@ -18,6 +19,7 @@
 #include <ti/sysbios/BIOS.h>
 #include <ti/sysbios/knl/Event.h>
 #include <ti/sysbios/knl/Task.h>
+#include <ti/sysbios/knl/Mailbox.h>
 
 /* Driverlib headers */
 #include <driverlib/gpio.h>
@@ -36,7 +38,8 @@
 #include "OLED_Task.h"
 #include "OLED_defines.h"
 #include "font.h"
-#include "Broker_Task.h"
+#include "common.h"
+#include "UART_Task.h"
 
 SPI_Handle masterSpi;
 
@@ -240,11 +243,11 @@ void oled_output(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
  */
 void oled_Fxn(UArg arg0, UArg arg1)
 {
+    uint8_t i, column;
+    uint16_t ret;
+    struct mbox_data mbox_data;
 
-
-    //System_printf("%3f", &werte_ausgabe->flt);
-
-    uint8_t i, ret, column;
+    Mailbox_Handle mbox_output = (Mailbox_Handle) arg0;
 
     ownSpiInit();
     oled_init();
@@ -253,13 +256,10 @@ void oled_Fxn(UArg arg0, UArg arg1)
     DDRAM_access();
     oled_Background();
 
-
-   /* char buffer[64];
-    float a = 1.234;
-    int ret = snprintf(buffer, 5, "%3f", a);*/
-
     char tempstring[] = "Temp:", pulsstring[] = "Puls:", spo2string[] = "SpO2:";
     System_flush();
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
     //write tempstring to display
     column = start_left;
@@ -269,37 +269,6 @@ void oled_Fxn(UArg arg0, UArg arg1)
                     tempstring[i], (char*) font2);
         column += 0x08;
     }
-
-    while(1)
-    {
-        Mailbox_pend(mbox_output,&mbox_data,BIOS_WAIT_FOREVER);
-        ret = snprintf(buffer, sizeof buffer, "%.3f", mbox_data.temp);
-        char
-        for (i = 0; i < sizeof(buffer); i++)
-        {
-            oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
-                        buffer[i], (char*) font2);
-            column += 0x08;
-        }
-    }
-    /*while (1)
-    {
-        int ret;
-
-        ret = snprintf(buffer[], sizeof buffer, "%3f", asdf);
-
-        if (ret >= sizeof buffer)
-        {
-            for (i = 0; i < sizeof(buffer); i++)
-            {
-                oled_output(column, row_TEMP, font_width, font_hight, WHITE,
-                BLUE, buffer[i], (char*) font2);
-                column += 0x08;
-            }
-        }
-    }*/
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
     //write pulsstring to display
     column = start_left;
     for (i = 0; i < sizeof(pulsstring); i++)
@@ -308,11 +277,6 @@ void oled_Fxn(UArg arg0, UArg arg1)
                     pulsstring[i], (char*) font2);
         column += 0x08;
     }
-    /*while (1)
-     {
-
-     }*/
-    /////////////////////////////////////////////////////////////////////////////////////////////////
     //write spo2string to display
     column = start_left;
     for (i = 0; i < sizeof(spo2string); i++)
@@ -321,40 +285,73 @@ void oled_Fxn(UArg arg0, UArg arg1)
                     spo2string[i], (char*) font2);
         column += 0x08;
     }
-    /*while (1)
-     {
+/////////////////////////////////////////////////////////////////////////////////////
+    while (1)
+    {
+        char buffer[100];
 
-     }*/
+        Mailbox_pend(mbox_output, &mbox_data, BIOS_WAIT_FOREVER);
+        oled_Background();
+        // Temp output
+        column = start_after_string;
+        ret = snprintf(buffer, sizeof buffer, "%.3f", mbox_data.temp);
+        for (i = 0; i < ret; i++)
+        {
+            oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
+                        buffer[i], (char*) font2);
+
+                column += 0x08;
+        }
+        // Heartrate output
+        column = start_after_string;
+        ret = snprintf(buffer, sizeof buffer, "%d", mbox_data.heartrate);
+        for (i = 0; i < ret; i++)
+        {
+            oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
+                        buffer[i], (char*) font2);
+
+                column += 0x08;
+        }
+        // SpO2 output
+        column = start_after_string;
+        ret = snprintf(buffer, sizeof buffer, "%.2f", mbox_data.spo);
+        for (i = 0; i < ret; i++)
+        {
+            oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
+                        buffer[i], (char*) font2);
+
+                column += 0x08;
+        }
+    }
 }
-
 
 /**
  * SPI Setup
  */
 void ownSpiInit()
 {
-/* Initialize SPI handle as default master */
-SysCtlPeripheralEnable(SYSCTL_PERIPH_CS);
-GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
+    /* Initialize SPI handle as default master */
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_CS);
+    GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
 
-SPI_Params spiParams;
+    SPI_Params spiParams;
 
-SPI_Params_init(&spiParams);
-spiParams.transferMode = SPI_MODE_BLOCKING;
-spiParams.transferCallbackFxn = NULL;
-spiParams.frameFormat = SPI_POL1_PHA1;    //Polarität und Phasenverschiebung
-spiParams.bitRate = 1000000;
-spiParams.dataSize = 16;
+    SPI_Params_init(&spiParams);
+    spiParams.transferMode = SPI_MODE_BLOCKING;
+    spiParams.transferCallbackFxn = NULL;
+    spiParams.frameFormat = SPI_POL1_PHA1;    //Polarität und Phasenverschiebung
+    spiParams.bitRate = 1000000;
+    spiParams.dataSize = 16;
 
-masterSpi = SPI_open(Board_SPI0, &spiParams);
-if (masterSpi == NULL)
-{
-    System_abort("Error initializing SPI\n");
-}
-else
-{
-    System_printf("SPI initialized\n");
-}
+    masterSpi = SPI_open(Board_SPI0, &spiParams);
+    if (masterSpi == NULL)
+    {
+        System_abort("Error initializing SPI\n");
+    }
+    else
+    {
+        System_printf("SPI initialized\n");
+    }
 }
 
 /**
@@ -362,25 +359,25 @@ else
  * @param arg0
  * @param arg1
  */
-int setup_OLED_Task(UArg arg0, UArg arg1)
+int setup_OLED_Task(UArg mailbox_output, UArg arg1)
 {
-Task_Params taskSPIParams;
-Task_Handle taskSPI;
-Error_Block eb;
-Error_init(&eb);
-Task_Params_init(&taskSPIParams);
-taskSPIParams.stackSize = 2048;             // stack in bytes
-taskSPIParams.priority = 15; // 0-15 (15 is highest priority on default -> see RTOS Task configuration)
-taskSPIParams.arg0 = 0;
-taskSPI = Task_create((Task_FuncPtr) oled_Fxn, &taskSPIParams, &eb);
-if (taskSPI == NULL)
-{
-    return 1;
-}
-else
-{
-    return 0;
-}
+    Task_Params taskSPIParams;
+    Task_Handle taskSPI;
+    Error_Block eb;
+    Error_init(&eb);
+    Task_Params_init(&taskSPIParams);
+    taskSPIParams.stackSize = 2048;             // stack in bytes
+    taskSPIParams.priority = 15; // 0-15 (15 is highest priority on default -> see RTOS Task configuration)
+    taskSPIParams.arg0 = mailbox_output;
+    taskSPI = Task_create((Task_FuncPtr) oled_Fxn, &taskSPIParams, &eb);
+    if (taskSPI == NULL)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 /**
@@ -389,20 +386,20 @@ else
  */
 void SPI_write(uint16_t byte)
 {
-SPI_Transaction masterTransaction;
-bool transferOK;
+    SPI_Transaction masterTransaction;
+    bool transferOK;
 
-masterTransaction.count = 1;
-masterTransaction.txBuf = (Ptr) &byte;
-masterTransaction.rxBuf = NULL;
+    masterTransaction.count = 1;
+    masterTransaction.txBuf = (Ptr) &byte;
+    masterTransaction.rxBuf = NULL;
 
-/* Initiate SPI transfer */
-transferOK = SPI_transfer(masterSpi, &masterTransaction);
-if (transferOK)
-{
-}
-else
-{
-    System_printf("Unsuccessful master SPI transfer");
-}
+    /* Initiate SPI transfer */
+    transferOK = SPI_transfer(masterSpi, &masterTransaction);
+    if (transferOK)
+    {
+    }
+    else
+    {
+        System_printf("Unsuccessful master SPI transfer");
+    }
 }

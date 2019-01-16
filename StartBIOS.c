@@ -86,6 +86,7 @@ int main(void)
     setup_Broker_Task(&broker_mboxes);
     setup_HeartRate_Task((UArg) mbox_input, (UArg) 0);
     setup_UART_Task((UArg) mbox_uart_out, (UArg) mbox_uart_in);
+    setup_OLED_Task((UArg) mbox_output,(UArg)0);
 
     System_printf("Created UART Task\n");
 
