@@ -35,7 +35,6 @@
 #include <ti/drivers/SPI.h>
 
 /* Application headers */
-#include "OLED_Task.h"
 #include "font.h"
 #include "common.h"
 #include "UART_Task.h"
@@ -130,30 +129,89 @@
 
 SPI_Handle masterSpi;
 
-/**
- * write command to OLED controller
+/** \fn ownSpiInit
+ *  \brief initialize SPI handle as default master
  *
- * @param cmd command
- * @param data command argument
+ *  This function initialize the SPI mode
+ *
+ */
+void ownSpiInit()
+{
+    /* Initialize SPI handle as default master */
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_CS);
+    GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
+
+    SPI_Params spiParams;
+
+    SPI_Params_init(&spiParams);
+    spiParams.transferMode = SPI_MODE_BLOCKING;
+    spiParams.transferCallbackFxn = NULL;
+    spiParams.frameFormat = SPI_POL1_PHA1;    //Polarität und Phasenverschiebung
+    spiParams.bitRate = 1000000;
+    spiParams.dataSize = 16;
+
+    masterSpi = SPI_open(Board_SPI0, &spiParams);
+    if (masterSpi == NULL)
+    {
+        System_abort("Error initializing SPI\n");
+    }
+}
+
+/** \fn spi_write
+ *  \brief writes data to spi
+ *
+ *  writes data to the SPI bus.
+ *
+ *  \param uint16_t data data to write to the SPI bus
+ */
+void SPI_write(uint16_t byte)
+{
+    SPI_Transaction masterTransaction;
+    bool transferOK;
+
+    masterTransaction.count = 1;
+    masterTransaction.txBuf = (Ptr) &byte;
+    masterTransaction.rxBuf = NULL;
+
+    /* Initiate SPI transfer */
+    transferOK = SPI_transfer(masterSpi, &masterTransaction);
+    if (transferOK)
+    {
+    }
+    else
+    {
+        System_abort("Unsuccessful master SPI transfer");
+    }
+}
+
+/** \fn oled_command
+ *  \brief writes cmd  and data
+ *
+ *  The function awaits a register_index and a register value (0/1) to write.
+ *
+ *  \param cmd the index in the register to write to
+ *  \param data to write to the regsiter, awaits 0 or 1.
  */
 void oled_command(uint8_t cmd, uint8_t data)
 {
-    //select index addres
     GPIOPinWrite(CS_PORT, CS_PIN, 0);       //Chip select to LOW
     GPIOPinWrite(DC_PORT, DC_PIN, 0);       //DC to LOW: command
     SPI_write(cmd);
     GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);  //Chip select to HIGH
 
-    //write to reg
     GPIOPinWrite(CS_PORT, CS_PIN, 0);       //Chip select to LOW
     GPIOPinWrite(DC_PORT, DC_PIN, DC_PIN);  //DC to HIGH: data
     SPI_write(data);
     GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);  //Chip select to HIGH
 }
 
-/**
- * write data to the OLED DDRAM
- * @param data_value 16 bit color value of the pixel
+/** \fn oled_data
+ *  \brief sends data to write
+ *
+ *  Function sends data to write via SPI to the Oled Display
+ *  the function awaits data in form of a bitstream?
+ *
+ *  \param uint16_t data the data that is sent to the display
  */
 void oled_data(uint16_t data_value)
 {
@@ -242,8 +300,12 @@ void oled_init()
     oled_command(DISPLAY_ON_OFF, 0x01);
 }
 
-/**
- * execute this command writing to the OLED DDRAM
+/** \fn DDRAM_access
+ *  \brief set next register to write to DDRAM
+ *
+ *  Function that sets next register to write to DDRAM. Here are the pixel information in there.
+ *  Color information for the pixel. e.g. 5 bit 6 bit 4 bit
+ *
  */
 void DDRAM_access()
 {
@@ -254,10 +316,15 @@ void DDRAM_access()
     GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);      //Chip select to HIGH
 }
 
-/**
- * set memory area(address) to write a display data
- * @param X coordinate
- * @param Y coordinate
+/** \fn oled_MermorySize
+ *  \brief send information what to write to display
+ *
+ *  The function sends a square with the x and y information, what is to write to the display. building the pixel -> letter
+ *
+ *  \param char X1 x coordinate
+ *  \param char X2 x coordinate
+ *  \param char Y1 y coordinate
+ *  \param char Y2 y coordinate
  */
 void oled_MemorySize(char X1, char X2, char Y1, char Y2)
 {
@@ -267,8 +334,12 @@ void oled_MemorySize(char X1, char X2, char Y1, char Y2)
     oled_command(MEM_Y2, Y2);
 }
 
-/**
- * set background color
+/** \fn oled_Background
+ *  \brief Sets background color and paints it
+ *
+ *  This function provides the background for the Oled Display.
+ *
+ *  \param uint16_t data the data that is sent to the display
  */
 void oled_Background()
 {
@@ -285,16 +356,19 @@ void oled_Background()
     }
 }
 
-/**
- * set oled_output parameter
- * @param start_x set column start
- * @param start_y set row start
- * @param font_size_x set font width
- * @param font_size_y set font hight
- * @param font_color set font color
- * @param bg_color set font background color
- * @param draw_me string print
- * @param *font_array font define
+/** \fn oled_output
+ *  \brief Sets Backgroundcolor and paints it
+ *
+ *  write to DDRAM with the last set memory size. loop in loop. 2 dimensional array,
+ *  one runs down, one to the side, so that every pixel gets written (char to draw is parameter i get), 14=x -> font size
+ *
+ *  \param uint8_t start_X value of the x coordinate
+ *  \param uint8_t start_y value of the y coordinate
+ *  \param uint8_t font_size_x value of the font width
+ *  \param uint8_t font_size_y value of the font height
+ *  \param uint16_t font_color
+ *  \param uint16_t bg_color
+ *  \param *font_array fonts for printing
  */
 void oled_output(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
                  uint8_t font_size_y, uint16_t font_color, uint16_t bg_color,
@@ -316,12 +390,15 @@ void oled_output(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
     }
 }
 
-/**
- * print output
- * @param arg0
- * @param arg1
+/** \fn oled_Fxn
+ *  \brief prints selected function to display
+ *
+ *  This function prints the given parameters to the display.
+ *
+ *  \param UArg arg0
+ *  \param UArg arg1
  */
-void oled_Fxn(UArg arg0, UArg arg1)
+void oled_Fxn(UArg arg0)
 {
     uint8_t i, column;
     uint16_t ret;
@@ -405,31 +482,6 @@ void oled_Fxn(UArg arg0, UArg arg1)
 }
 
 /**
- * SPI Setup
- */
-void ownSpiInit()
-{
-    /* Initialize SPI handle as default master */
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_CS);
-    GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
-
-    SPI_Params spiParams;
-
-    SPI_Params_init(&spiParams);
-    spiParams.transferMode = SPI_MODE_BLOCKING;
-    spiParams.transferCallbackFxn = NULL;
-    spiParams.frameFormat = SPI_POL1_PHA1;    //Polarität und Phasenverschiebung
-    spiParams.bitRate = 1000000;
-    spiParams.dataSize = 16;
-
-    masterSpi = SPI_open(Board_SPI0, &spiParams);
-    if (masterSpi == NULL)
-    {
-        System_abort("Error initializing SPI\n");
-    }
-}
-
-/**
  * setup Oled Task
  * @param arg0
  * @param ui32SysClock
@@ -464,29 +516,5 @@ int setup_OLED_Task(UArg mailbox_output, UArg ui32SysClock)
     else
     {
         return 0;
-    }
-}
-
-/**
- * set spi transfer
- * @param byte value for transfer
- */
-void SPI_write(uint16_t byte)
-{
-    SPI_Transaction masterTransaction;
-    bool transferOK;
-
-    masterTransaction.count = 1;
-    masterTransaction.txBuf = (Ptr) &byte;
-    masterTransaction.rxBuf = NULL;
-
-    /* Initiate SPI transfer */
-    transferOK = SPI_transfer(masterSpi, &masterTransaction);
-    if (transferOK)
-    {
-    }
-    else
-    {
-        System_abort("Unsuccessful master SPI transfer");
     }
 }
