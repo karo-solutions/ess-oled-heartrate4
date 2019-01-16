@@ -6,8 +6,8 @@
 #ifndef OLED_TASK_H_
 #define OLED_TASK_H_
 
-/** \fn OLED_C_comman
- *  \brief writes index register and value
+/** \fn oled_command
+ *  \brief writes cmd  and data
  *
  *  The function awaits a register_index and a register value (0/1) to write.
  *
@@ -82,12 +82,12 @@ void oled_output(uint8_t start_x, uint8_t start_y, uint8_t font_size_x, uint8_t 
  */
 void oled_Fxn(UArg arg0, UArg arg1);
 
-/*
+/**
  *
  */
 void ownSpiInit(void);
 
-/*! \fn setup_OLED_Task
+/** \fn setup_OLED_Task
  *  \brief sets up a task
  *
  *  This function creates a task with all of its necessary information such as task params, task handle, priority of the task...
