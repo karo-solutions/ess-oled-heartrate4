@@ -89,9 +89,9 @@ void HR4_setup()
         System_abort("Event create failed");
     }
 
-    /* install Button callback */
+    /* Interrupt Function*/
     GPIO_setCallback(Board_PD4, Isr);
-    /* Enable interrupts */
+    /* Enable interrupt */
     GPIO_enableInt(Board_PD4);
 
     //Enable DIE_TEMP_RDY Interrupt
@@ -236,8 +236,6 @@ float getTemp()
     if (!I2C_transfer(handle, &i2c))
         System_abort("Unsuccessful I2C transfer!");
 
-    //System_printf("START PEND\n");
-    //System_flush();
     do
     {
         Event_pend(interruptEvent, Event_Id_NONE, Event_Id_00,
@@ -268,9 +266,6 @@ float getTemp()
     ret_tfrac = readBuffer[0];
     frac = (ret_tfrac * 0.0625);
     frac += ret_tint;
-
-    System_printf("TINT: %d   ---  TFRAC: %d\n",ret_tint,readBuffer[0]);
-    System_flush();
 
     return frac;
 }
@@ -365,8 +360,8 @@ void getHeartRate()
             //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x -FIFO_DATA 3: %x -FIFO_DATA 4: %x \n",readBuffer[0],readBuffer[1],readBuffer[2],readBuffer[3],readBuffer[4]);
             //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x\nCALC: %x\n",readBuffer[0],readBuffer[1],readBuffer[2],red_val);
             //System_printf("CALC: %x -- %d -- SampleNum: %d\n", red_val, red_val,sampleNum);
-            System_printf("%d\n",red_val);
-            System_flush();
+            //System_printf("%d\n",red_val);
+            //System_flush();
 
             //if ((red_val - old_val) < -50)
             //    System_printf("DOWNFALL - actual: %d --- old: %d\n",red_val,old_val);

@@ -95,7 +95,7 @@ void ownSpiInit(void);
  *  \param arg0
  *  \param arg1
  */
-int setup_OLED_Task(UArg mailbox_output, UArg arg1);
+int setup_OLED_Task(UArg mailbox_output, UArg ui32SysClock);
 
 /** \fn spi_write
  *  \brief writes data to spi

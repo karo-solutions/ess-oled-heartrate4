@@ -372,8 +372,20 @@ void ownSpiInit()
  * @param arg0
  * @param arg1
  */
-int setup_OLED_Task(UArg mailbox_output, UArg arg1)
+int setup_OLED_Task(UArg mailbox_output, UArg ui32SysClock)
 {
+    SSIClockSourceSet(SSI2_BASE, SSI_CLOCK_SYSTEM);
+    SSIConfigSetExpClk(SSI2_BASE, (uint32_t)ui32SysClock, SSI_FRF_MOTO_MODE_0,
+                       SSI_MODE_MASTER, 60 * 1000 * 1000, 16);
+    SSIEnable(SSI2_BASE);
+
+    //RST
+    GPIOPinTypeGPIOOutput(RST_PORT, RST_PIN);
+    //CS
+    GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
+    //DC
+    GPIOPinTypeGPIOOutput(DC_PORT, DC_PIN);
+
     Task_Params taskSPIParams;
     Task_Handle taskSPI;
     Error_Block eb;

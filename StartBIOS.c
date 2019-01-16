@@ -55,30 +55,10 @@ int main(void)
 
     uint32_t ui32SysClock = Board_initGeneral(120 * 1000 * 1000);
     Board_initSPI();
-
-    /* Call board init functions. */
-        (void) ui32SysClock; // We don't really need this (yet)
-
-
     Board_initI2C();
     Board_initGPIO();
-
-
-    SSIClockSourceSet(SSI2_BASE, SSI_CLOCK_SYSTEM);
-    SSIConfigSetExpClk(SSI2_BASE, ui32SysClock, SSI_FRF_MOTO_MODE_0,
-                       SSI_MODE_MASTER, 60 * 1000 * 1000, 16);
-    SSIEnable(SSI2_BASE);
-
-    //RST
-    GPIOPinTypeGPIOOutput(RST_PORT, RST_PIN);
-    //CS
-    GPIOPinTypeGPIOOutput(CS_PORT, CS_PIN);
-    //DC
-    GPIOPinTypeGPIOOutput(DC_PORT, DC_PIN);
-
-    //setup_OLED_Task(0,0);
-
     initMailboxes();
+
     broker_mboxes.mbox_input = mbox_input;
     broker_mboxes.mbox_output = mbox_output;
     broker_mboxes.mbox_uart_out = mbox_uart_out;
@@ -86,12 +66,11 @@ int main(void)
     setup_Broker_Task(&broker_mboxes);
     setup_HeartRate_Task((UArg) mbox_input, (UArg) 0);
     setup_UART_Task((UArg) mbox_uart_out, (UArg) mbox_uart_in);
-    setup_OLED_Task((UArg) mbox_output,(UArg)0);
+    setup_OLED_Task((UArg) mbox_output,(UArg) ui32SysClock);
 
     System_printf("Created UART Task\n");
 
     /* SysMin will only print to the console upon calling flush or exit */
-
     System_printf("Start BIOS\n");
     System_flush();
 
@@ -101,9 +80,6 @@ int main(void)
 
 void initMailboxes(void)
 {
-    //struct mbox_data mbox_data;
-    //struct mbox_uart_in_data mbox_uart_in_data;
-
     Error_Block eb;
     Mailbox_Params mailboxParams;
     Mailbox_Params_init(&mailboxParams);
