@@ -61,5 +61,7 @@ void clearFIFO();
 void HR4_reset();
 void bitSet(uint8_t addr, uint8_t mask, uint8_t value);
 void Isr();
+void resetInterruptStatus();
+void myClockHandler();
 
 #endif /* LOCAL_INC_HR4_HELPER_H_ */
