@@ -108,24 +108,24 @@ void initMailboxes(void)
     Mailbox_Params mailboxParams;
     Mailbox_Params_init(&mailboxParams);
     Error_init(&eb);
-    mbox_input = Mailbox_create(sizeof(struct mbox_data), 10, &mailboxParams, &eb);
+    mbox_input = Mailbox_create(sizeof(struct mbox_data), 2, &mailboxParams, &eb);
     if (mbox_input == NULL)
         System_abort("Mailbox create failed");
     System_printf("Created MailBox mbox_input\n");
 
-    mbox_output = Mailbox_create(sizeof(struct mbox_data), 10, &mailboxParams, &eb);
+    mbox_output = Mailbox_create(sizeof(struct mbox_data), 2, &mailboxParams, &eb);
     if (mbox_input == NULL)
         System_abort("Mailbox create failed");
     System_printf("Created MailBox mbox_output\n");
 
 
-    mbox_uart_out = Mailbox_create(sizeof(struct mbox_data), 10, &mailboxParams, &eb);
+    mbox_uart_out = Mailbox_create(sizeof(struct mbox_data), 2, &mailboxParams, &eb);
     if (mbox_input == NULL)
         System_abort("Mailbox create failed");
     System_printf("Created MailBox mbox_uart_out\n");
 
 
-    mbox_uart_in = Mailbox_create(sizeof(struct mbox_uart_in_data), 10, &mailboxParams, &eb);
+    mbox_uart_in = Mailbox_create(sizeof(struct mbox_uart_in_data), 2, &mailboxParams, &eb);
     if (mbox_input == NULL)
         System_abort("Mailbox create failed");
     System_printf("Created MailBox mbox_uart_in\n");

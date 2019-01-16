@@ -289,39 +289,54 @@ void oled_Fxn(UArg arg0, UArg arg1)
     while (1)
     {
         char buffer[100];
+        char emptyString[7] = "       ";
 
         Mailbox_pend(mbox_output, &mbox_data, BIOS_WAIT_FOREVER);
-        oled_Background();
+        column = start_after_string;
+        for (i = 0; i < sizeof(emptyString); i++)
+        {
+            oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
+                        emptyString[i], (char*) font2);
+            oled_output(column, row_PULS, font_width, font_hight, WHITE, BLUE,
+                        emptyString[i], (char*) font2);
+            oled_output(column, row_SPO2, font_width, font_hight, WHITE, BLUE,
+                        emptyString[i], (char*) font2);
+
+            column += 0x08;
+        }
+        //oled_Background();
         // Temp output
         column = start_after_string;
-        ret = snprintf(buffer, sizeof buffer, "%.3f", mbox_data.temp);
+        ret = snprintf(buffer, sizeof buffer, "%.2f", mbox_data.temp);
         for (i = 0; i < ret; i++)
         {
             oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
                         buffer[i], (char*) font2);
 
-                column += 0x08;
+            column += 0x08;
         }
         // Heartrate output
         column = start_after_string;
         ret = snprintf(buffer, sizeof buffer, "%d", mbox_data.heartrate);
         for (i = 0; i < ret; i++)
         {
-            oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
+            oled_output(column, row_PULS, font_width, font_hight, WHITE, BLUE,
                         buffer[i], (char*) font2);
 
-                column += 0x08;
+            column += 0x08;
         }
         // SpO2 output
         column = start_after_string;
         ret = snprintf(buffer, sizeof buffer, "%.2f", mbox_data.spo);
         for (i = 0; i < ret; i++)
         {
-            oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
+            oled_output(column, row_SPO2, font_width, font_hight, WHITE, BLUE,
                         buffer[i], (char*) font2);
 
-                column += 0x08;
+            column += 0x08;
         }
+        Task_sleep(200);
+
     }
 }
 
