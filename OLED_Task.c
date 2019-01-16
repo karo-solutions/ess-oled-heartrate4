@@ -56,14 +56,12 @@ void oled_command(uint8_t cmd, uint8_t data)
     GPIOPinWrite(DC_PORT, DC_PIN, 0);       //DC to LOW: command
     SPI_write(cmd);
     GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);  //Chip select to HIGH
-    System_printf("Select Index Addres\n");
 
     //write to reg
     GPIOPinWrite(CS_PORT, CS_PIN, 0);       //Chip select to LOW
     GPIOPinWrite(DC_PORT, DC_PIN, DC_PIN);  //DC to HIGH: data
     SPI_write(data);
     GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);  //Chip select to HIGH
-    System_printf("Write to Register\n");
 }
 
 /**
@@ -155,8 +153,6 @@ void oled_init()
     oled_command(DISPLAYSTART_Y, 0x00);
     //display on
     oled_command(DISPLAY_ON_OFF, 0x01);
-    System_printf("OLED Init\n");
-
 }
 
 /**
@@ -169,7 +165,6 @@ void DDRAM_access()
 
     SPI_write(RAM_DATA_ACCESS_PORT);
     GPIOPinWrite(CS_PORT, CS_PIN, CS_PIN);      //Chip select to HIGH
-    System_printf("DDRAM_access\n");
 }
 
 /**
@@ -183,7 +178,6 @@ void oled_MemorySize(char X1, char X2, char Y1, char Y2)
     oled_command(MEM_X2, X2);
     oled_command(MEM_Y1, Y1);
     oled_command(MEM_Y2, Y2);
-    System_printf("Memory Size\n");
 }
 
 /**
@@ -233,7 +227,6 @@ void oled_output(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
                 oled_data(bg_color);
         }
     }
-    System_printf("OLED Ausgabe\n");
 }
 
 /**
@@ -257,7 +250,6 @@ void oled_Fxn(UArg arg0, UArg arg1)
     oled_Background();
 
     char tempstring[] = "Temp:", pulsstring[] = "Puls:", spo2string[] = "SpO2:";
-    System_flush();
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -289,21 +281,10 @@ void oled_Fxn(UArg arg0, UArg arg1)
     while (1)
     {
         char buffer[100];
-        //char emptyString[7] = "       ";
 
         Mailbox_pend(mbox_output, &mbox_data, BIOS_WAIT_FOREVER);
-        /*column = start_after_string;
-        for (i = 0; i < sizeof(emptyString); i++)
-        {
-            oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
-                        emptyString[i], (char*) font2);
-            oled_output(column, row_PULS, font_width, font_hight, WHITE, BLUE,
-                        emptyString[i], (char*) font2);
-            oled_output(column, row_SPO2, font_width, font_hight, WHITE, BLUE,
-                        emptyString[i], (char*) font2);
 
-            column += 0x08;
-        }*/
+        // Temp output
         column = start_after_string;
         ret = snprintf(buffer, sizeof buffer, "%.2f  ", mbox_data.temp);
         for (i = 0; i < ret; i++)
@@ -333,8 +314,6 @@ void oled_Fxn(UArg arg0, UArg arg1)
 
             column += 0x08;
         }
-        //Task_sleep(200);
-
     }
 }
 
@@ -360,10 +339,6 @@ void ownSpiInit()
     if (masterSpi == NULL)
     {
         System_abort("Error initializing SPI\n");
-    }
-    else
-    {
-        System_printf("SPI initialized\n");
     }
 }
 
@@ -425,6 +400,6 @@ void SPI_write(uint16_t byte)
     }
     else
     {
-        System_printf("Unsuccessful master SPI transfer");
+        System_abort("Unsuccessful master SPI transfer");
     }
 }
