@@ -2,43 +2,34 @@
  * OLED_C Task Version 1.0
  * Thomas Neugschwandtner
  */
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <inc/hw_memmap.h>
-
 /* XDCtools Header files */
 #include <xdc/std.h>
 #include <xdc/cfg/global.h>
 #include <xdc/runtime/System.h>
 #include <xdc/runtime/Error.h>
 #include <xdc/runtime/Memory.h>
-
 /* BIOS Header files */
 #include <ti/sysbios/BIOS.h>
 #include <ti/sysbios/knl/Event.h>
 #include <ti/sysbios/knl/Task.h>
 #include <ti/sysbios/knl/Mailbox.h>
-
 /* Driverlib headers */
 #include <driverlib/gpio.h>
-
+#include <driverlib/ssi.h>
+#include <driverlib/sysctl.h>
 /* Board Header files */
 #include <Board.h>
 #include <EK_TM4C1294XL.h>
-
-#include <driverlib/ssi.h>
-#include <driverlib/sysctl.h>
-
 /* TI-RTOS Header files */
 #include <ti/drivers/SPI.h>
-
 /* Application headers */
 #include "font.h"
 #include "common.h"
 #include "UART_Task.h"
-
 //////////////////////////////////////////////////////////////////////////
 /*
  * GPIO defines
@@ -61,7 +52,6 @@
 #define SYSCTL_PERIPH_RW SYSCTL_PERIPH_GPIOE
 #define RW_PORT GPIO_PORTE_BASE
 #define RW_PIN GPIO_PIN_4
-
 /*
  * value defines
  */
@@ -80,7 +70,6 @@
 #define disp_x_max 0x5F
 #define disp_y_min 0x00
 #define disp_y_max 0x5F
-
 /*
  * OLED Adress defines
  */
@@ -126,7 +115,6 @@
 #define RGB_POL 0xE1
 #define DISPLAY_MODE_CONTROL 0xE5
 ///////////////////////////////////////////////////////////////////////////
-
 SPI_Handle masterSpi;
 
 /** \fn ownSpiInit
@@ -489,8 +477,9 @@ void oled_Fxn(UArg arg0)
 int setup_OLED_Task(UArg mailbox_output, UArg ui32SysClock)
 {
     SSIClockSourceSet(SSI2_BASE, SSI_CLOCK_SYSTEM);
-    SSIConfigSetExpClk(SSI2_BASE, (uint32_t)ui32SysClock, SSI_FRF_MOTO_MODE_0,
-                       SSI_MODE_MASTER, 60 * 1000 * 1000, 16);
+    SSIConfigSetExpClk(SSI2_BASE, (uint32_t) ui32SysClock, SSI_FRF_MOTO_MODE_0,
+    SSI_MODE_MASTER,
+                       60 * 1000 * 1000, 16);
     SSIEnable(SSI2_BASE);
 
     //RST

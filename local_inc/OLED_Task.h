@@ -2,10 +2,8 @@
  * Fxn´s for OLED_C Click
  * controller SEPS114A
  */
-
 #ifndef OLED_TASK_H_
 #define OLED_TASK_H_
-
 
 /** \fn setup_OLED_Task
  *  \brief set Oled Task
