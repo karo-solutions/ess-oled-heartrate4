@@ -57,7 +57,7 @@ void BrokerFxn(UArg arg0, UArg arg1){
 
 
     while(1){
-        mbox_data.temp = 500;
+        mbox_data.temp = 404;
         Mailbox_pend(mbox_input,&mbox_data, 500);
         Mailbox_pend(mbox_uart_in,&mbox_uart_in_data,100);
         if (mbox_uart_in_data.mode == 1){
@@ -68,7 +68,7 @@ void BrokerFxn(UArg arg0, UArg arg1){
             writeModeFlag = mbox_uart_in_data.messagecount;
             mbox_uart_in_data.mode = 0;
         }
-        if (mbox_data.temp == 500){
+        if (mbox_data.temp == 404){
 
         }
         else{
@@ -86,21 +86,12 @@ void BrokerFxn(UArg arg0, UArg arg1){
                 mbox_data.temp = mbox_uart_in_data.temp;
                 mbox_data.heartrate = mbox_uart_in_data.heartrate;
                 mbox_data.spo = mbox_uart_in_data.spo;
-                Mailbox_post(mbox_output,&mbox_data,BIOS_WAIT_FOREVER);
+                Mailbox_post(mbox_output,&mbox_data,100);
             }
             writeModeFlag = 0;
 
         }
-
-
-
-
-        //System_printf("Broker MBOX triggered\n Temp: %d\n",mbox_data.temp);
-        //System_flush();
-
     }
-
-
 }
 
 int setup_Broker_Task(struct broker_mboxes *broker_mboxes) {

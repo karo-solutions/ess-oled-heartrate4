@@ -194,8 +194,8 @@ void bitSet(uint8_t addr, uint8_t mask, uint8_t value)
 
 float getTemp()
 {
-    uint8_t ret_tint, ret_tfrac;
-    float frac;
+    uint8_t ret_tint;
+    float frac,ret_tfrac;
 
     writeBuffer[0] = TEMP_EN;
     writeBuffer[1] = 0x01;
