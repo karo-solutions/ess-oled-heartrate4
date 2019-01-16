@@ -82,7 +82,10 @@ void oled_output(uint8_t start_x, uint8_t start_y, uint8_t font_size_x, uint8_t 
  */
 void oled_Fxn(UArg arg0, UArg arg1);
 
-/**
+/** \fn ownSpiInit
+ *  \brief initialize SPI handle as default master
+ *
+ *  This function initialize the SPI mode
  *
  */
 void ownSpiInit(void);
