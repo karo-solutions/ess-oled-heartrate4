@@ -40,11 +40,31 @@ uint8_t readBuffer[8];
 I2C_Handle handle;
 I2C_Params i2cparams;
 I2C_Transaction i2c;
+volatile uint32_t clockCount;
+
+//Clock_Handle myClock;
 
 void HR4_setup()
 {
 
     Error_init(&eb);
+
+    /*clockCount = 0;
+    Clock_Params clockParams;
+    Clock_Params_init(&clockParams);
+    clockParams.period = 1000;
+    clockParams.startFlag = TRUE;
+    myClock = Clock_create((Clock_FuncPtr) myClockHandler, 10, &clockParams, &eb);
+    if (myClock == NULL)
+    {
+        System_abort("myClock create failed");
+    }
+    System_printf("Created Clock myClock\n");
+    System_flush();
+    Clock_stop(myClock);*/
+
+
+
 
     I2C_Params_init(&i2cparams);
 
@@ -129,28 +149,38 @@ void HR4_setup()
     System_printf("INT ENABLE2 response: %x\n", response);
     System_flush();
 
+    resetInterruptStatus();
+
+
+
+}
+
+void myClockHandler()
+{
+    clockCount++;
+    System_printf("CLOCK HANDLER TRIGGERED\n");
+    System_flush();
+    /*if (clockCount == 1000)
+    {
+
+        System_printf("CLOCK HANDLER TRIGGERED\n");
+        System_flush();
+        clockCount = 0;
+    }*/
+}
+
+void resetInterruptStatus(){
     i2c.readCount = 1;
     i2c.writeCount = 1;
     writeBuffer[0] = INT_STATUS1;
     if (!I2C_transfer(handle, &i2c))
         System_abort("Unsuccessful I2C transfer!");
 
-    response = readBuffer[0];
-
-    System_printf("First: INT STATUS response: %x\n", response);
-    System_flush();
-
     i2c.readCount = 1;
     i2c.writeCount = 1;
     writeBuffer[0] = INT_STATUS2;
     if (!I2C_transfer(handle, &i2c))
         System_abort("Unsuccessful I2C transfer!");
-
-    response = readBuffer[0];
-
-    System_printf("Second: INT STATUS response: %x\n", response);
-    System_flush();
-
 }
 
 void HR4_reset()
@@ -197,6 +227,8 @@ float getTemp()
     uint8_t ret_tint;
     float frac,ret_tfrac;
 
+    resetInterruptStatus();
+
     writeBuffer[0] = TEMP_EN;
     writeBuffer[1] = 0x01;
     i2c.readCount = 0;
@@ -204,9 +236,20 @@ float getTemp()
     if (!I2C_transfer(handle, &i2c))
         System_abort("Unsuccessful I2C transfer!");
 
-    System_printf("START PEND\n");
-    System_flush();
-    Event_pend(interruptEvent, Event_Id_NONE, Event_Id_00, BIOS_WAIT_FOREVER);
+    //System_printf("START PEND\n");
+    //System_flush();
+    do
+    {
+        Event_pend(interruptEvent, Event_Id_NONE, Event_Id_00,
+                   BIOS_WAIT_FOREVER);
+
+        i2c.readCount = 1;
+        i2c.writeCount = 1;
+        writeBuffer[0] = INT_STATUS2;
+        if (!I2C_transfer(handle, &i2c))
+            System_abort("Unsuccessful I2C transfer!");
+    }
+    while ((readBuffer[0] != 2));
 
     i2c.readCount = 1;
     i2c.writeCount = 1;
@@ -227,7 +270,6 @@ float getTemp()
     frac += ret_tint;
 
     System_printf("TINT: %d   ---  TFRAC: %d\n",ret_tint,readBuffer[0]);
-    //System_printf("Calculated Temperature: %d.%d \n", ret_tint, frac);
     System_flush();
 
     return frac;
@@ -239,106 +281,111 @@ void getHeartRate()
     uint8_t wrPtr = 0;
     uint8_t rdPtr = 0;
     uint32_t i = 0;
+    uint8_t j = 0;
     uint32_t red_val;
-    static uint32_t old_val = 0;
+    uint32_t old_val = 0;
     uint8_t temp[4] = {0};
 
     clearFIFO();
 
+
     //resetting prox_int_en
     //bitSet(INT_ENABLE1, INT_PROX_EN_MASK, INT_PROX_EN);
+    //Clock_start(myClock);
+    //while (clockCount < 10)
+    for (j = 0; j < 3; ++j)
+    {
+        clearFIFO();
+        do
+        {
+            Task_sleep(30);
+            /*resetInterruptStatus();
+             Event_pend(interruptEvent, Event_Id_NONE, Event_Id_00, BIOS_WAIT_FOREVER);
+             i2c.readCount = 1;
+             i2c.writeCount = 1;
+             writeBuffer[0] = INT_STATUS1;
+             if (!I2C_transfer(handle, &i2c))
+             System_abort("Unsuccessful I2C transfer!");
 
+             System_printf("INTSTATUS1: %x\n",readBuffer[0]);
+             System_flush();
 
-    //Event_pend(interruptEvent, Event_Id_NONE, Event_Id_00, BIOS_WAIT_FOREVER);
-    Task_sleep(5);
-    i2c.readCount = 1;
-    i2c.writeCount = 1;
-    writeBuffer[0] = INT_STATUS1;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
+             i2c.readCount = 1;
+             i2c.writeCount = 1;
+             writeBuffer[0] = INT_STATUS2;
+             if (!I2C_transfer(handle, &i2c))
+             System_abort("Unsuccessful I2C transfer!");*/
 
-    //System_printf("INTERRUPT --- INT_STATUS1: %x\n",readBuffer[0]);
-    //System_flush();
+            //System_printf("see whats in fifo\n");
+            //System_flush();
 
-    i2c.readCount = 1;
-    i2c.writeCount = 1;
-    writeBuffer[0] = INT_STATUS2;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
+            //-- FIFO --
+            i2c.readCount = 1;
+            i2c.writeCount = 1;
+            writeBuffer[0] = FIFO_WR_PTR;
+            if (!I2C_transfer(handle, &i2c))
+                System_abort("Unsuccessful I2C transfer!");
 
-    //System_printf("INTERRUPT --- INT_STATUS2: %x\n",readBuffer[0]);
-    //System_flush();
+            wrPtr = readBuffer[0];
+            //System_printf("FIFO_WR_PTR: %x\n",wrPtr);
+            //System_flush();
 
-    //-- FIFO --
+            i2c.readCount = 1;
+            i2c.writeCount = 1;
+            writeBuffer[0] = FIFO_RD_PTR;
+            if (!I2C_transfer(handle, &i2c))
+                System_abort("Unsuccessful I2C transfer!");
+            rdPtr = readBuffer[0];
+            //System_printf("FIFO_RD_PTR: %x\n",rdPtr);
+            //System_flush();
 
-   i2c.readCount = 1;
-    i2c.writeCount = 1;
-    writeBuffer[0] = FIFO_WR_PTR;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
+            sampleNum = wrPtr - rdPtr;
+        }
+        while (sampleNum < 15);
 
-    wrPtr = readBuffer[0];
-    //System_printf("FIFO_WR_PTR: %x\n",wrPtr);
-    //System_flush();
+        for (i = 0; i < sampleNum; ++i)
+        {
 
-    i2c.readCount = 1;
-    i2c.writeCount = 1;
-    writeBuffer[0] = FIFO_RD_PTR;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-    rdPtr = readBuffer[0];
-    //System_printf("FIFO_RD_PTR: %x\n",rdPtr);
-    //System_flush();
+            i2c.readCount = 3;
+            i2c.writeCount = 1;
+            writeBuffer[0] = FIFO_DATA;
+            if (!I2C_transfer(handle, &i2c))
+                System_abort("Unsuccessful I2C transfer!");
+            temp[3] = 0;
+            temp[2] = readBuffer[0] & 0x03;
+            temp[1] = readBuffer[1];
+            temp[0] = readBuffer[2];
 
-    sampleNum = wrPtr - rdPtr;
-    //System_printf("sapleNum: %x\n",sampleNum);
-    //System_flush();
+            //System_printf("Temp0: %x Temp1: %x Temp2: %x Temp3: %x Temp4: %x Temp5: %x Temp6: %x Temp7: %x\n",readBuffer[0],readBuffer[1],readBuffer[2],readBuffer[3],readBuffer[4],readBuffer[5],readBuffer[6],readBuffer[7]);
+            //System_printf("Temp0: %x Temp1: %x Temp2: %x --- %x%x%x ----- %x%x%x\n",temp[0],temp[1],temp[2],temp[2],temp[1],temp[0],temp[0],temp[1],temp[2]);
+            //System_printf("%x%x%x\n",temp[2],temp[1],temp[0]);
+            //System_flush();
 
+            memcpy(&red_val, temp, 4);
+            //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x -FIFO_DATA 3: %x -FIFO_DATA 4: %x \n",readBuffer[0],readBuffer[1],readBuffer[2],readBuffer[3],readBuffer[4]);
+            //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x\nCALC: %x\n",readBuffer[0],readBuffer[1],readBuffer[2],red_val);
+            //System_printf("CALC: %x -- %d -- SampleNum: %d\n", red_val, red_val,sampleNum);
+            System_printf("%d\n",red_val);
+            System_flush();
 
-    for (i = 0; i < sampleNum; ++i ){
+            //if ((red_val - old_val) < -50)
+            //    System_printf("DOWNFALL - actual: %d --- old: %d\n",red_val,old_val);
 
-    i2c.readCount = 3;
-    i2c.writeCount = 1;
-    writeBuffer[0] = FIFO_DATA;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-    temp[3] = 0;
-    temp[2] = readBuffer[0] & 0x03;
-    temp[1] = readBuffer[1];
-    temp[0] = readBuffer[2];
+            //System_flush();
+            //old_val = red_val;
 
-    //System_printf("Temp0: %x Temp1: %x Temp2: %x Temp3: %x Temp4: %x Temp5: %x Temp6: %x Temp7: %x\n",readBuffer[0],readBuffer[1],readBuffer[2],readBuffer[3],readBuffer[4],readBuffer[5],readBuffer[6],readBuffer[7]);
-    //System_printf("Temp0: %x Temp1: %x Temp2: %x --- %x%x%x ----- %x%x%x\n",temp[0],temp[1],temp[2],temp[2],temp[1],temp[0],temp[0],temp[1],temp[2]);
-    //System_printf("%x%x%x\n",temp[2],temp[1],temp[0]);
-    //System_flush();
-
-
-    memcpy(&red_val, temp, 4);
-    //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x -FIFO_DATA 3: %x -FIFO_DATA 4: %x \n",readBuffer[0],readBuffer[1],readBuffer[2],readBuffer[3],readBuffer[4]);
-    //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x\nCALC: %x\n",readBuffer[0],readBuffer[1],readBuffer[2],red_val);
-    //System_printf("CALC: %x -- %d -- SampleNum: %d ",red_val,red_val,sampleNum);
-    //System_flush();
-
-
-
-
-    if ((red_val - old_val) < -50)
-        System_printf("DOWNFALL - actual: %d --- old: %d\n",red_val,old_val);
-
-    System_flush();
-    old_val = red_val;
-
-
-
-    /*i2c.readCount = 1;
-    i2c.writeCount = 1;
-    writeBuffer[0] = FIFO_RD_PTR;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-    rdPtr = readBuffer[0];
-    System_printf("FIFO_RD_PTR: %x\n",rdPtr);
-    System_flush();*/
+            /*i2c.readCount = 1;
+             i2c.writeCount = 1;
+             writeBuffer[0] = FIFO_RD_PTR;
+             if (!I2C_transfer(handle, &i2c))
+             System_abort("Unsuccessful I2C transfer!");
+             rdPtr = readBuffer[0];
+             System_printf("FIFO_RD_PTR: %x\n",rdPtr);
+             System_flush();*/
+        }
     }
+    clockCount = 0;
+    //Clock_stop(myClock);
     //red_avg /= sampleNum;
     //System_printf("Red_avg: %x\n",red_avg);
     //System_printf("sapleNum: %x\n",sampleNum);

@@ -1,6 +1,6 @@
 /*
  *  ======== UART_Task.c ========
- *  Author: Michael Kramer / Matthias Wenzl
+ *  Author: Robert
  */
 #include <stdbool.h>
 #include <stdint.h>

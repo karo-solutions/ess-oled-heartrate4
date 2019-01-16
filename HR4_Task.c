@@ -58,7 +58,9 @@ void HeartRateFxn(UArg arg0, UArg arg1){
         mbox_data.spo = 95.3;
         //temp = getTemp();
         Mailbox_post(mbox_input,&mbox_data,BIOS_WAIT_FOREVER);
-        Task_sleep(5000);
+        //getTemp();
+        getHeartRate();
+        Task_sleep(100);
         //getHeartRate();
     }
 
@@ -73,7 +75,7 @@ int setup_HeartRate_Task(UArg mbox_input, UArg arg1) {
 
     Error_init(&eb);
     Task_Params_init(&taskHRParams);
-    taskHRParams.stackSize = 1024;
+    taskHRParams.stackSize = 2048;
     taskHRParams.priority = 15;
     taskHRParams.arg0 = (UArg) mbox_input;
     taskHR = Task_create((Task_FuncPtr) HeartRateFxn, &taskHRParams, &eb);
