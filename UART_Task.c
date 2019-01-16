@@ -52,17 +52,19 @@ void UARTFxn(UArg arg0, UArg arg1)
 
     UART_Handle uart;
     UART_Params uartParams;
-    char buffer[64];
+    char buffer[100];
     char *ptr;
-    uint8_t readsize;
     uint16_t i;
     uint16_t ret;
-    long entry;
+    long entry,temp,heartrate,spo;
     const char echoPrompt[] = "------------------------------------MENU------------------------------------------\r\n(1) For ReadMode\r\n(2) For WriteMode\r\n";
     const char errorPrompt[] = "ENTER NUMBERS ONLY!\r\n";
     const char tempPrompt[] = "Temp: ";
+    const char heartratePrompt[] = "Heartrate: ";
+    const char spoPrompt[] = "SPO2: ";
     const char countPrompt[] = "How many messages do you want to read/write?\r\n";
-    const char fakeDataPrompt[] = "Enter Fake Data!";
+    const char fakeDataPrompt[] = "Enter Fake Data!\r\n";
+    const char dataSentPrompt[] = "Fake Data sent!\r\n";
 
     /* Create a UART with data processing off. */
     UART_Params_init(&uartParams);
@@ -82,24 +84,7 @@ void UARTFxn(UArg arg0, UArg arg1)
     /* Loop forever echoing */
     while (1) {
         UART_write(uart, echoPrompt, sizeof(echoPrompt));
-        //char input;
 
-        //int8_t temp = 5;
-
-        //ret = sprintf (buffer, "Temp: %d\n", temp);
-        //ret = snprintf(buffer, sizeof buffer, "Temp: %d", temp);
-        //System_printf("TEST: %s\n",buffer);
-        //System_flush();
-        //UART_write(uart, &buffer, ret);
-
-
-
-        //uint8_t ret;
-        //char buffer[64];
-        //float myFloat = -35.993;
-        //ret = snprintf(buffer, sizeof buffer, "%f", myFloat);
-        //sprintf(buffer, "TEST: %f", myFloat);
-        //UART_write(uart, &buffer, ret-3);
         UART_read(uart, &buffer, 64);
         entry = strtol(buffer,&ptr,10);
         switch(entry) {
@@ -112,27 +97,55 @@ void UARTFxn(UArg arg0, UArg arg1)
             Mailbox_post(mbox_uart_in,&mbox_uart_in_data,100);
             for (i = 0; i < entry; ++i ){
                 Mailbox_pend(mbox_uart_out,&mbox_data,BIOS_WAIT_FOREVER);
-                ret = snprintf(buffer, sizeof buffer, "Temp: %.3f\n", mbox_data.temp);
-                UART_write(uart, &buffer, ret-3);
-                System_printf("LOOP\n");
-                System_flush();
+                ret = snprintf(buffer, sizeof buffer, "Temp: %.3f, Heartrate: %d, SPO2: %.2f\r\n", mbox_data.temp,mbox_data.heartrate,mbox_data.spo);
+                UART_write(uart, &buffer, ret);
             }
             break;
 
         case 2:
-            System_printf("duuuo\n");
-            System_flush();
+
+            UART_write(uart, countPrompt, sizeof(countPrompt));
+            UART_read(uart, &buffer, 64);
+            entry = strtol(buffer,&ptr,10);
+            if (entry == 0){
+                UART_write(uart, errorPrompt, sizeof(errorPrompt));
+                break;
+
+            }
+            mbox_uart_in_data.mode = 2;
+            mbox_uart_in_data.messagecount = entry;
+            Mailbox_post(mbox_uart_in,&mbox_uart_in_data,100);
+            for (i = 0; i < entry; ++i ){
+                UART_write(uart, fakeDataPrompt, sizeof(fakeDataPrompt));
+                UART_write(uart, tempPrompt, sizeof(tempPrompt));
+                UART_read(uart, &buffer, 64);
+                temp = strtol(buffer,&ptr,10);
+                UART_write(uart, heartratePrompt, sizeof(heartratePrompt));
+                UART_read(uart, &buffer, 64);
+                heartrate = strtol(buffer,&ptr,10);
+                UART_write(uart, spoPrompt, sizeof(spoPrompt));
+                UART_read(uart, &buffer, 64);
+                spo = strtol(buffer,&ptr,10);
+
+                if(temp == 0 || heartrate == 0 || spo == 0){
+                    UART_write(uart, errorPrompt, sizeof(errorPrompt));
+                    i++;
+                    continue;
+                }
+                mbox_uart_in_data.mode = 0;
+                mbox_uart_in_data.messagecount = 0;
+                mbox_uart_in_data.temp = temp;
+                mbox_uart_in_data.heartrate = heartrate;
+                mbox_uart_in_data.spo = spo;
+                Mailbox_post(mbox_uart_in,&mbox_uart_in_data,500);
+                UART_write(uart, dataSentPrompt, sizeof(dataSentPrompt));
+            }
             break;
 
         default:
             UART_write(uart, errorPrompt, sizeof(errorPrompt));
         }
-        //if (strtol()==0){
 
-        //    UART_write(uart, &buffer, readsize);
-         //   buffer[readsize] = "\0";
-         //   UART_write(uart, &buffer, readsize);
-        //}
         GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 1);
         //UART_write(uart, &input, 1); // Remove this line to stop echoing!
         Task_sleep(5);
