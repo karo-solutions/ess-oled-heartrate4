@@ -91,7 +91,7 @@ volatile uint32_t clockCount;
 
 //Clock_Handle myClock;
 
-void Isr()
+void Isr(uint32_t index)
 {
     Event_post(interruptEvent, Event_Id_00);
 }
