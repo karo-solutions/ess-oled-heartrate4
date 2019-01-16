@@ -36,6 +36,7 @@
 #include "OLED_Task.h"
 #include "OLED_defines.h"
 #include "font.h"
+#include "Broker_Task.h"
 
 SPI_Handle masterSpi;
 
@@ -243,7 +244,7 @@ void oled_Fxn(UArg arg0, UArg arg1)
 
     //System_printf("%3f", &werte_ausgabe->flt);
 
-    uint8_t i, column;
+    uint8_t i, ret, column;
 
     ownSpiInit();
     oled_init();
@@ -269,13 +270,18 @@ void oled_Fxn(UArg arg0, UArg arg1)
         column += 0x08;
     }
 
-    /*for (i = 0; i < sizeof(buffer); i++)
+    while(1)
     {
-        oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
-                    buffer[i], (char*) font2);
-        column += 0x08;
-    }*/
-
+        Mailbox_pend(mbox_output,&mbox_data,BIOS_WAIT_FOREVER);
+        ret = snprintf(buffer, sizeof buffer, "%.3f", mbox_data.temp);
+        char
+        for (i = 0; i < sizeof(buffer); i++)
+        {
+            oled_output(column, row_TEMP, font_width, font_hight, WHITE, BLUE,
+                        buffer[i], (char*) font2);
+            column += 0x08;
+        }
+    }
     /*while (1)
     {
         int ret;
