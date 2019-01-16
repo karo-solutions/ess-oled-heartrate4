@@ -37,12 +37,12 @@
 #include <Broker_Task.h>
 
 /* Application headers */
-#include <OLED_defines.h>
 #include <OLED_Task.h>
 #include <UART_Task.h>
 #include <common.h>
 
 void initMailboxes(void);
+
 //Mailbox Handler
 static Mailbox_Handle mbox_input;
 static Mailbox_Handle mbox_output;
@@ -64,7 +64,7 @@ int main(void)
     broker_mboxes.mbox_uart_out = mbox_uart_out;
     broker_mboxes.mbox_uart_in = mbox_uart_in;
     setup_Broker_Task(&broker_mboxes);
-    setup_HeartRate_Task((UArg) mbox_input, (UArg) 0);
+    setup_HeartRate_Task((UArg) mbox_input);
     setup_UART_Task((UArg) mbox_uart_out, (UArg) mbox_uart_in);
     setup_OLED_Task((UArg) mbox_output,(UArg) ui32SysClock);
 

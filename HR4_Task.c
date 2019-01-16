@@ -42,7 +42,6 @@
  *  Setup Clock
  */
 void HeartRateFxn(UArg arg0, UArg arg1){
-    uint32_t temp;
     struct mbox_data mbox_data;
 
     System_printf("HeartRate_Task created!\n");
@@ -57,18 +56,15 @@ void HeartRateFxn(UArg arg0, UArg arg1){
         mbox_data.temp = getTemp();
         mbox_data.heartrate = 60;
         mbox_data.spo = 95.3;
-        //temp = getTemp();
-        //getTemp();
         getHeartRate();
         Mailbox_post(mbox_input,&mbox_data,BIOS_WAIT_FOREVER);
         Task_sleep(500);
-        //getHeartRate();
     }
 
 
 }
 
-int setup_HeartRate_Task(UArg mbox_input, UArg arg1) {
+int setup_HeartRate_Task(UArg mbox_input) {
 
     Task_Params taskHRParams;
     Task_Handle taskHR;

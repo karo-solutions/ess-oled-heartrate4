@@ -33,6 +33,53 @@
 #include <EK_TM4C1294XL.h>
 #include <HR4_helper.h>
 
+#define HR4_I2C_ADDRESS 0x57
+#define TINT 0x1F
+#define TFRAC 0x20
+#define TEMP_EN 0x21
+#define LED1_PA 0x0C
+#define LED2_PA 0x0D
+#define LED3_PA 0x0E
+#define PILOT_PA 0x10
+#define PROX_INT_THRESH 0x30
+#define MODE 0x09
+#define MODE_MASK 0xF8
+#define MODE_HR 0x02
+#define MODE_SPO2 0x03
+#define MODE_MULTILED 0x07
+#define SPO2_CONF_REG 0x0A
+#define SPO2_SR 0x18
+#define SPO2_SR_MASK 0xE3
+#define RESET 0x40
+#define RESET_MASK 0xBF
+#define FIFO_CONF 0x08
+//#define SMP_AVG 0xA0
+#define SMP_AVG 0x40
+#define SMP_AVG_MASK 0x1F
+#define FIFO_A_FULL 0x02
+#define FIFO_A_FULL_MASK 0xF0
+#define FIFO_ROLLOVER_EN 0x10
+#define FIFO_ROLLOVER_EN_MASK 0xEF
+#define FIFO_WR_PTR 0x04
+#define OVF_COUNTER 0x05
+#define FIFO_RD_PTR 0x06
+#define FIFO_DATA 0x07
+#define INT_STATUS1 0x00
+#define INT_STATUS2 0x01
+#define INT_ENABLE1 0x02
+#define INT_ENABLE2 0x03
+#define INT_DIE_TEMP_RDY_EN 0x02
+#define INT_DIE_TEMP_RDY_EN_MASK 0xFD
+#define INT_A_FULL_EN 0x80
+#define INT_A_FULL_EN_MASK 0x7F
+#define INT_PPG_RDY 0x40
+#define INT_PPG_RDY_MASK 0xBF
+#define INT_PROX_EN 0x10
+#define INT_PROX_EN_MASK 0xEF
+#define INT_A_FULL 0x80
+#define INT_A_FULL_MASK 0x7F
+
+
 static Error_Block eb;
 static Event_Handle interruptEvent;
 uint8_t writeBuffer[8];
@@ -43,6 +90,101 @@ I2C_Transaction i2c;
 volatile uint32_t clockCount;
 
 //Clock_Handle myClock;
+
+void Isr()
+{
+    Event_post(interruptEvent, Event_Id_00);
+}
+
+void myClockHandler()
+{
+    clockCount++;
+    System_printf("CLOCK HANDLER TRIGGERED\n");
+    System_flush();
+}
+
+void bitSet(uint8_t addr, uint8_t mask, uint8_t value)
+{
+    i2c.readCount = 1;
+    i2c.writeCount = 1;
+    writeBuffer[0] = addr;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+
+    uint8_t oldBits = readBuffer[0] & mask;
+
+    writeBuffer[0] = addr;
+    writeBuffer[1] = oldBits | value;
+    i2c.readCount = 0;
+    i2c.writeCount = 2;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+
+}
+
+void clearFIFO(){
+    writeBuffer[0] = FIFO_WR_PTR;
+    writeBuffer[1] = 0;
+    i2c.writeCount = 2;
+    i2c.readCount = 0;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+
+
+    writeBuffer[0] = OVF_COUNTER;
+    writeBuffer[1] = 0;
+    i2c.writeCount = 2;
+    i2c.readCount = 0;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+
+
+    writeBuffer[0] = FIFO_RD_PTR;
+    writeBuffer[1] = 0;
+    i2c.writeCount = 2;
+    i2c.readCount = 0;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+}
+
+
+void HR4_reset()
+{
+    bitSet(MODE, RESET_MASK, RESET);
+    uint8_t response;
+
+    do
+    {
+        Task_sleep(10);
+        i2c.readCount = 1;
+        i2c.writeCount = 1;
+        writeBuffer[0] = MODE;
+        if (!I2C_transfer(handle, &i2c))
+            System_abort("Unsuccessful I2C transfer!");
+
+        response = readBuffer[0];
+
+    }
+    while ((response & RESET) != 0);
+}
+
+void resetInterruptStatus(){
+    i2c.readCount = 1;
+    i2c.writeCount = 1;
+    writeBuffer[0] = INT_STATUS1;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+
+    i2c.readCount = 1;
+    i2c.writeCount = 1;
+    writeBuffer[0] = INT_STATUS2;
+    if (!I2C_transfer(handle, &i2c))
+        System_abort("Unsuccessful I2C transfer!");
+}
+
+
+
+
 
 void HR4_setup()
 {
@@ -96,11 +238,9 @@ void HR4_setup()
 
     //Enable DIE_TEMP_RDY Interrupt
     bitSet(INT_ENABLE2, INT_DIE_TEMP_RDY_EN_MASK, INT_DIE_TEMP_RDY_EN);
-    //Enable A_FULL Interrupt
-    //bitSet(INT_ENABLE1, INT_A_FULL_MASK, INT_A_FULL);
     //FIFO SMP_AVE
     bitSet(FIFO_CONF, SMP_AVG_MASK, SMP_AVG);
-    // FIFO Almost Full Value 30
+    // FIFO Almost Full Value
     //bitSet(FIFO_CONF, FIFO_A_FULL_MASK, FIFO_A_FULL);
     bitSet(FIFO_CONF, FIFO_ROLLOVER_EN_MASK, FIFO_ROLLOVER_EN);
     //setting prox_int_en
@@ -155,72 +295,13 @@ void HR4_setup()
 
 }
 
-void myClockHandler()
-{
-    clockCount++;
-    System_printf("CLOCK HANDLER TRIGGERED\n");
-    System_flush();
-    /*if (clockCount == 1000)
-    {
 
-        System_printf("CLOCK HANDLER TRIGGERED\n");
-        System_flush();
-        clockCount = 0;
-    }*/
-}
 
-void resetInterruptStatus(){
-    i2c.readCount = 1;
-    i2c.writeCount = 1;
-    writeBuffer[0] = INT_STATUS1;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
 
-    i2c.readCount = 1;
-    i2c.writeCount = 1;
-    writeBuffer[0] = INT_STATUS2;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-}
 
-void HR4_reset()
-{
-    bitSet(MODE, RESET_MASK, RESET);
-    uint8_t response;
 
-    do
-    {
-        Task_sleep(10);
-        i2c.readCount = 1;
-        i2c.writeCount = 1;
-        writeBuffer[0] = MODE;
-        if (!I2C_transfer(handle, &i2c))
-            System_abort("Unsuccessful I2C transfer!");
 
-        response = readBuffer[0];
 
-    }
-    while ((response & RESET) != 0);
-}
-
-void bitSet(uint8_t addr, uint8_t mask, uint8_t value)
-{
-    i2c.readCount = 1;
-    i2c.writeCount = 1;
-    writeBuffer[0] = addr;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-
-    uint8_t oldBits = readBuffer[0] & mask;
-
-    writeBuffer[0] = addr;
-    writeBuffer[1] = oldBits | value;
-    i2c.readCount = 0;
-    i2c.writeCount = 2;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-
-}
 
 float getTemp()
 {
@@ -278,7 +359,6 @@ void getHeartRate()
     uint32_t i = 0;
     uint8_t j = 0;
     uint32_t red_val;
-    uint32_t old_val = 0;
     uint8_t temp[4] = {0};
 
     clearFIFO();
@@ -407,38 +487,5 @@ void getHeartRate()
 
 }
 
-void clearFIFO(){
-    writeBuffer[0] = FIFO_WR_PTR;
-    writeBuffer[1] = 0;
-    i2c.writeCount = 2;
-    i2c.readCount = 0;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
 
 
-    writeBuffer[0] = OVF_COUNTER;
-    writeBuffer[1] = 0;
-    i2c.writeCount = 2;
-    i2c.readCount = 0;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-
-
-    writeBuffer[0] = FIFO_RD_PTR;
-    writeBuffer[1] = 0;
-    i2c.writeCount = 2;
-    i2c.readCount = 0;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-}
-
-void Isr()
-{
-    //System_printf("ISR TRIGGERED\n");
-    //System_flush();
-
-    //TODO check which Interrupt got triggered
-    //... cannot read I2C here :( need function which waits for every interrupt...
-    Event_post(interruptEvent, Event_Id_00);
-
-}
