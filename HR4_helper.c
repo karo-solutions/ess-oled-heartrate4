@@ -86,8 +86,9 @@ uint8_t readBuffer[8];
 I2C_Handle handle;
 I2C_Params i2cparams;
 I2C_Transaction i2c;
-volatile uint32_t clockCount;
 
+/* TODO: Process HeartRate Signal with Clock */
+//volatile uint32_t clockCount;
 //Clock_Handle myClock;
 
 void Isr(uint32_t index)
@@ -95,12 +96,10 @@ void Isr(uint32_t index)
     Event_post(interruptEvent, Event_Id_00);
 }
 
-void myClockHandler()
+/*void myClockHandler()
 {
     clockCount++;
-    System_printf("CLOCK HANDLER TRIGGERED\n");
-    System_flush();
-}
+}*/
 
 void bitSet(uint8_t addr, uint8_t mask, uint8_t value)
 {
@@ -190,10 +189,11 @@ void HR4_setup()
 
     Error_init(&eb);
 
+    // TODO: Process HeartRate Signal with Clock
     /*clockCount = 0;
     Clock_Params clockParams;
     Clock_Params_init(&clockParams);
-    clockParams.period = 1000;
+    clockParams.period = 1;
     clockParams.startFlag = TRUE;
     myClock = Clock_create((Clock_FuncPtr) myClockHandler, 10, &clockParams, &eb);
     if (myClock == NULL)
@@ -203,9 +203,6 @@ void HR4_setup()
     System_printf("Created Clock myClock\n");
     System_flush();
     Clock_stop(myClock);*/
-
-
-
 
     I2C_Params_init(&i2cparams);
 
@@ -239,17 +236,21 @@ void HR4_setup()
     bitSet(INT_ENABLE2, INT_DIE_TEMP_RDY_EN_MASK, INT_DIE_TEMP_RDY_EN);
     //FIFO SMP_AVE
     bitSet(FIFO_CONF, SMP_AVG_MASK, SMP_AVG);
-    // FIFO Almost Full Value
-    //bitSet(FIFO_CONF, FIFO_A_FULL_MASK, FIFO_A_FULL);
+    //FIFO Rollover
     bitSet(FIFO_CONF, FIFO_ROLLOVER_EN_MASK, FIFO_ROLLOVER_EN);
-    //setting prox_int_en
-    //bitSet(INT_ENABLE1, INT_PROX_EN_MASK, INT_PROX_EN);
+
     //MODE_HR
     bitSet(MODE, MODE_MASK, MODE_HR);
     //SPO2 Sample Rate
     bitSet(SPO2_CONF_REG, SPO2_SR_MASK, SPO2_SR);
+
+    /* TODO: Get HeartRate Values after "FIFO_A_FULL"-Interrupt triggers */
+    // FIFO Almost Full Value
+    //bitSet(FIFO_CONF, FIFO_A_FULL_MASK, FIFO_A_FULL);
     //setting new fifo data int
     //bitSet(INT_ENABLE1, INT_PPG_RDY_MASK, INT_PPG_RDY);
+    //setting prox_int_en
+    //bitSet(INT_ENABLE1, INT_PROX_EN_MASK, INT_PROX_EN);
 
     //RED
     bitSet(LED1_PA,0,0x1F);
@@ -263,49 +264,13 @@ void HR4_setup()
     //PROX THRESHOLD
     bitSet(PROX_INT_THRESH,0,0x1F);
 
-
-
-
-    i2c.readCount = 1;
-    i2c.writeCount = 1;
-    writeBuffer[0] = INT_ENABLE1;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-
-    int response = readBuffer[0];
-
-    System_printf("INT ENABLE1 response: %x\n", response);
-    System_flush();
-
-    i2c.readCount = 1;
-    i2c.writeCount = 1;
-    writeBuffer[0] = INT_ENABLE2;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-
-    response = readBuffer[0];
-
-    System_printf("INT ENABLE2 response: %x\n", response);
-    System_flush();
-
-    resetInterruptStatus();
-
-
-
+    //resetInterruptStatus();
 }
-
-
-
-
-
-
-
-
 
 float getTemp()
 {
-    uint8_t ret_tint;
-    float frac,ret_tfrac;
+    int8_t ret_tint;
+    uint8_t ret_tfrac;
 
     resetInterruptStatus();
 
@@ -344,10 +309,8 @@ float getTemp()
         System_abort("Unsuccessful I2C transfer!");
 
     ret_tfrac = readBuffer[0];
-    frac = (ret_tfrac * 0.0625);
-    frac += ret_tint;
 
-    return frac;
+    return (float)ret_tint + ((float)ret_tfrac * 0.0625);
 }
 
 void getHeartRate()
@@ -358,40 +321,28 @@ void getHeartRate()
     uint32_t i = 0;
     uint8_t j = 0;
     uint32_t red_val;
-    uint8_t temp[4] = {0};
+    uint8_t temp[4] = { 0 };
 
     clearFIFO();
 
-
-    //resetting prox_int_en
-    //bitSet(INT_ENABLE1, INT_PROX_EN_MASK, INT_PROX_EN);
-    //Clock_start(myClock);
-    //while (clockCount < 10)
+    //TODO: Clock_start(myClock) and remove for loop
+    //Run for a few seconds -> determine min and max value and calculate 25%
+    //count when the values pass that 25% value to calculate Heart Rate
     for (j = 0; j < 3; ++j)
     {
         clearFIFO();
         do
         {
             Task_sleep(30);
-            /*resetInterruptStatus();
+
+            //TODO: Wait for A_FULL_INT; Remove do-while loop and Task_sleep
+            /*
              Event_pend(interruptEvent, Event_Id_NONE, Event_Id_00, BIOS_WAIT_FOREVER);
              i2c.readCount = 1;
              i2c.writeCount = 1;
              writeBuffer[0] = INT_STATUS1;
              if (!I2C_transfer(handle, &i2c))
-             System_abort("Unsuccessful I2C transfer!");
-
-             System_printf("INTSTATUS1: %x\n",readBuffer[0]);
-             System_flush();
-
-             i2c.readCount = 1;
-             i2c.writeCount = 1;
-             writeBuffer[0] = INT_STATUS2;
-             if (!I2C_transfer(handle, &i2c))
              System_abort("Unsuccessful I2C transfer!");*/
-
-            //System_printf("see whats in fifo\n");
-            //System_flush();
 
             //-- FIFO --
             i2c.readCount = 1;
@@ -401,8 +352,6 @@ void getHeartRate()
                 System_abort("Unsuccessful I2C transfer!");
 
             wrPtr = readBuffer[0];
-            //System_printf("FIFO_WR_PTR: %x\n",wrPtr);
-            //System_flush();
 
             i2c.readCount = 1;
             i2c.writeCount = 1;
@@ -410,8 +359,6 @@ void getHeartRate()
             if (!I2C_transfer(handle, &i2c))
                 System_abort("Unsuccessful I2C transfer!");
             rdPtr = readBuffer[0];
-            //System_printf("FIFO_RD_PTR: %x\n",rdPtr);
-            //System_flush();
 
             sampleNum = wrPtr - rdPtr;
         }
@@ -430,60 +377,10 @@ void getHeartRate()
             temp[1] = readBuffer[1];
             temp[0] = readBuffer[2];
 
-            //System_printf("Temp0: %x Temp1: %x Temp2: %x Temp3: %x Temp4: %x Temp5: %x Temp6: %x Temp7: %x\n",readBuffer[0],readBuffer[1],readBuffer[2],readBuffer[3],readBuffer[4],readBuffer[5],readBuffer[6],readBuffer[7]);
-            //System_printf("Temp0: %x Temp1: %x Temp2: %x --- %x%x%x ----- %x%x%x\n",temp[0],temp[1],temp[2],temp[2],temp[1],temp[0],temp[0],temp[1],temp[2]);
-            //System_printf("%x%x%x\n",temp[2],temp[1],temp[0]);
-            //System_flush();
-
             memcpy(&red_val, temp, 4);
-            //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x -FIFO_DATA 3: %x -FIFO_DATA 4: %x \n",readBuffer[0],readBuffer[1],readBuffer[2],readBuffer[3],readBuffer[4]);
-            //System_printf("FIFO_DATA 0: %x -FIFO_DATA 1: %x -FIFO_DATA 2: %x\nCALC: %x\n",readBuffer[0],readBuffer[1],readBuffer[2],red_val);
-            //System_printf("CALC: %x -- %d -- SampleNum: %d\n", red_val, red_val,sampleNum);
-            //System_printf("%d\n",red_val);
-            //System_flush();
 
-            //if ((red_val - old_val) < -50)
-            //    System_printf("DOWNFALL - actual: %d --- old: %d\n",red_val,old_val);
-
-            //System_flush();
-            //old_val = red_val;
-
-            /*i2c.readCount = 1;
-             i2c.writeCount = 1;
-             writeBuffer[0] = FIFO_RD_PTR;
-             if (!I2C_transfer(handle, &i2c))
-             System_abort("Unsuccessful I2C transfer!");
-             rdPtr = readBuffer[0];
-             System_printf("FIFO_RD_PTR: %x\n",rdPtr);
-             System_flush();*/
         }
     }
-    clockCount = 0;
-    //Clock_stop(myClock);
-    //red_avg /= sampleNum;
-    //System_printf("Red_avg: %x\n",red_avg);
-    //System_printf("sapleNum: %x\n",sampleNum);
-    //System_flush();
-
-
-    /*
-    Task_sleep(5000);
-
-    writeBuffer[0] = LED1_PA;
-    writeBuffer[1] = 0x0;
-
-    i2c.writeCount = 2;
-    i2c.readCount = 0;
-    if (!I2C_transfer(handle, &i2c))
-        System_abort("Unsuccessful I2C transfer!");
-
-    System_printf("RED OFF\n");
-    System_flush();
-
-    */
-
-
-
 }
 
 

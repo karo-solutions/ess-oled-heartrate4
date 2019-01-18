@@ -1,11 +1,10 @@
 /*! \file UART_Task.h
     \brief UART task
-    \author Matthias Wenzl
-    \author Michael Kramer
+    \author Robert Hofmann
 
 
-    UART Task example.
-
+    UART Task.
+    Simple Menu for receiving and sending Data to Broker_Task.
 */
 
 #ifndef UART_TASK_H_
@@ -30,7 +29,7 @@ void UARTFxn(UArg arg0, UArg arg1);
  *  \brief Setup UART task
  *
  *  Setup UART task
- *  Task has highest priority and receives 1kB of stack
+ *  Task has highest priority and receives 2kB of stack
  *
  *  \return always zero. In case of error the system halts.
  */
