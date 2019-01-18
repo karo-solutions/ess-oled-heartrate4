@@ -31,7 +31,7 @@
 /* Board Header files */
 #include <Board.h>
 #include <EK_TM4C1294XL.h>
-#include <HR4_helper.h>
+//#include <HR4_helper.h>
 
 #define HR4_I2C_ADDRESS 0x57
 #define TINT 0x1F
@@ -53,7 +53,6 @@
 #define RESET 0x40
 #define RESET_MASK 0xBF
 #define FIFO_CONF 0x08
-//#define SMP_AVG 0xA0
 #define SMP_AVG 0x40
 #define SMP_AVG_MASK 0x1F
 #define FIFO_A_FULL 0x02

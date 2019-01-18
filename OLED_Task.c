@@ -28,7 +28,7 @@
 #include <ti/drivers/SPI.h>
 /* Application headers */
 #include "font.h"
-#include "common.h"
+#include "MBox_common.h"
 #include "UART_Task.h"
 //////////////////////////////////////////////////////////////////////////
 /*

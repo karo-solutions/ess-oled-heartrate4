@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inc/hw_memmap.h>
-#include <math.h>
+//#include <math.h>
 
 /* XDCtools Header files */
 #include <xdc/std.h>
@@ -34,8 +34,8 @@
 #include <EK_TM4C1294XL.h>
 
 /* Application headers */
-#include <UART_Task.h>
-#include <common.h>
+//#include <UART_Task.h>
+#include <MBox_common.h>
 
 
 /*

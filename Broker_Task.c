@@ -6,7 +6,7 @@
  */
 #include <stdbool.h>
 #include <stdint.h>
-#include <inc/hw_memmap.h>
+//#include <inc/hw_memmap.h>
 
 /* XDCtools Header files */
 #include <xdc/std.h>
@@ -18,21 +18,21 @@
 /* BIOS Header files */
 #include <ti/sysbios/BIOS.h>
 #include <ti/sysbios/knl/Task.h>
-#include <ti/sysbios/knl/Clock.h>
-#include <ti/sysbios/knl/Event.h>
+//#include <ti/sysbios/knl/Clock.h>
+//#include <ti/sysbios/knl/Event.h>
 #include <ti/sysbios/knl/Mailbox.h>
-#include <ti/drivers/I2C.h>
+//#include <ti/drivers/I2C.h>
 
 /* Driverlib headers */
-#include <driverlib/gpio.h>
+//#include <driverlib/gpio.h>
 
 /* Board Header files */
 #include <Board.h>
 #include <EK_TM4C1294XL.h>
 
 /* Application headers */
-#include <Broker_Task.h>
-#include <common.h>
+//#include <Broker_Task.h>
+#include <MBox_common.h>
 
 
 

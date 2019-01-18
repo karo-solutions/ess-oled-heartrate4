@@ -3,7 +3,7 @@
  */
 #include <stdbool.h>
 #include <stdint.h>
-#include <inc/hw_memmap.h>
+//#include <inc/hw_memmap.h>
 
 /* XDCtools Header files */
 #include <xdc/std.h>
@@ -14,32 +14,33 @@
 
 /* BIOS Header files */
 #include <ti/sysbios/BIOS.h>
-#include <ti/sysbios/knl/Task.h>
+//#include <ti/sysbios/knl/Task.h>
 
 /* Currently unused RTOS headers that are needed
  * for advanced features like IPC. */
-#include <ti/sysbios/knl/Semaphore.h>
+//#include <ti/sysbios/knl/Semaphore.h>
 #include <ti/sysbios/knl/Mailbox.h>
-#include <ti/sysbios/knl/Event.h>
-#include <ti/sysbios/hal/Timer.h>
+//#include <ti/sysbios/knl/Event.h>
+//#include <ti/sysbios/hal/Timer.h>
 
 /* Driverlib headers */
-#include <driverlib/gpio.h>
+//#include <driverlib/gpio.h>
 #include <driverlib/sysctl.h>
-#include <driverlib/pin_map.h>
-#include <driverlib/i2c.h>
-#include <driverlib/ssi.h>
+//#include <driverlib/pin_map.h>
+//#include <driverlib/i2c.h>
+//#include <driverlib/ssi.h>
 
 /* Board Header files */
 #include <Board.h>
 #include <EK_TM4C1294XL.h>
-#include <HR4_Task.h>
-#include <Broker_Task.h>
+
 
 /* Application headers */
+#include <HR4_Task.h>
+#include <Broker_Task.h>
 #include <OLED_Task.h>
 #include <UART_Task.h>
-#include <common.h>
+#include <MBox_common.h>
 
 void initMailboxes(void);
 

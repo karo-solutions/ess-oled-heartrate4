@@ -8,6 +8,9 @@
 #ifndef LOCAL_INC_COMMON_H_
 #define LOCAL_INC_COMMON_H_
 
+#include <stdint.h>
+#include <ti/sysbios/knl/Mailbox.h>
+
 struct mbox_data {
     float temp;
     uint8_t heartrate;
