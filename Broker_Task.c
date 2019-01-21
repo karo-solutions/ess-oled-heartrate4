@@ -1,12 +1,10 @@
 /*
- * Broker_Task.c
- *
- *  Created on: Jan 11, 2019
- *      Author: Robert
+ *  ======== Broker_Task.c ========
+ *  Author: Robert Hofmann
  */
+
 #include <stdbool.h>
 #include <stdint.h>
-//#include <inc/hw_memmap.h>
 
 /* XDCtools Header files */
 #include <xdc/std.h>
@@ -18,27 +16,15 @@
 /* BIOS Header files */
 #include <ti/sysbios/BIOS.h>
 #include <ti/sysbios/knl/Task.h>
-//#include <ti/sysbios/knl/Clock.h>
-//#include <ti/sysbios/knl/Event.h>
 #include <ti/sysbios/knl/Mailbox.h>
-//#include <ti/drivers/I2C.h>
-
-/* Driverlib headers */
-//#include <driverlib/gpio.h>
 
 /* Board Header files */
 #include <Board.h>
 #include <EK_TM4C1294XL.h>
 
 /* Application headers */
-//#include <Broker_Task.h>
 #include <MBox_common.h>
 
-
-
-/*
- *  Setup Clock
- */
 void BrokerFxn(UArg arg0, UArg arg1){
 
     struct mbox_data mbox_data;

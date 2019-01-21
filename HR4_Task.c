@@ -1,12 +1,10 @@
 /*
- * HR4_Task.c
- *
- *  Created on: Jan 9, 2019
- *      Author: Robert
+ *  ======== HR4_Task.c ========
+ *  Author: Robert Hofmann
  */
+
 #include <stdbool.h>
 #include <stdint.h>
-//#include <inc/hw_memmap.h>
 
 /* XDCtools Header files */
 #include <xdc/std.h>
@@ -18,21 +16,13 @@
 /* BIOS Header files */
 #include <ti/sysbios/BIOS.h>
 #include <ti/sysbios/knl/Task.h>
-//#include <ti/sysbios/knl/Clock.h>
-//#include <ti/sysbios/knl/Event.h>
 #include <ti/sysbios/knl/Mailbox.h>
-//#include <ti/sysbios/knl/Semaphore.h>
-//#include <ti/drivers/I2C.h>
-
-/* Driverlib headers */
-//#include <driverlib/gpio.h>
 
 /* Board Header files */
 #include <Board.h>
 #include <EK_TM4C1294XL.h>
 
 /* Application headers */
-//#include <HR4_Task.h>
 #include <HR4_helper.h>
 #include <MBox_common.h>
 

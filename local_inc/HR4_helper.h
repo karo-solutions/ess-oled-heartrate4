@@ -1,9 +1,11 @@
-/*
- * HR4_helper.h
+/** \file HR4_helper.h
+ *  \brief HR4_helper
+ *  \author Robert Hofmann
  *
- *  Created on: Jan 9, 2019
- *      Author: Robert
- */
+ *  HR4_helper.
+ *  Manages communication and data processing of HeartRate 4 Click Module.
+ *
+*/
 
 #ifndef LOCAL_INC_HR4_HELPER_H_
 #define LOCAL_INC_HR4_HELPER_H_
@@ -18,7 +20,7 @@
  *  Waits for Interrupt
  *  Calculates Temperature
  *
- *  \return Temperature in Celsius
+ *  \return temperature in celsius
  */
 float getTemp();
 

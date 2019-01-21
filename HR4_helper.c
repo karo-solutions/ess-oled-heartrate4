@@ -1,9 +1,8 @@
 /*
- * HR4_helper.c
- *
- *  Created on: Jan 9, 2019
- *      Author: Robert
+ *  ======== HR4_helper.c ========
+ *  Author: Robert Hofmann
  */
+
 /* Application headers */
 #include <stdbool.h>
 #include <stdint.h>
@@ -31,7 +30,6 @@
 /* Board Header files */
 #include <Board.h>
 #include <EK_TM4C1294XL.h>
-//#include <HR4_helper.h>
 
 #define HR4_I2C_ADDRESS 0x57
 #define TINT 0x1F
@@ -81,11 +79,11 @@
 
 static Error_Block eb;
 static Event_Handle interruptEvent;
-uint8_t writeBuffer[8];
-uint8_t readBuffer[8];
-I2C_Handle handle;
-I2C_Params i2cparams;
-I2C_Transaction i2c;
+static uint8_t writeBuffer[8];
+static uint8_t readBuffer[8];
+static I2C_Handle handle;
+static I2C_Params i2cparams;
+static I2C_Transaction i2c;
 
 /* TODO: Process HeartRate Signal with Clock */
 //volatile uint32_t clockCount;

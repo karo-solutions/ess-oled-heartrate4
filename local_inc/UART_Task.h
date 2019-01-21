@@ -1,10 +1,11 @@
-/*! \file UART_Task.h
-    \brief UART task
-    \author Robert Hofmann
-
-
-    UART Task.
-    Simple Menu for receiving and sending Data to Broker_Task.
+/** \file UART_Task.h
+ *  \brief UART task
+ *  \author Robert Hofmann
+ *
+ *  UART Task.
+ *  Prints a menu: User can type 1 for Read Mode and 2 for Write Mode
+ *  Asks for the number of values to Read/Write
+ *  After the Input/Output of Data the Broker will go to default mode: get Data from Input -> post to output
 */
 
 #ifndef UART_TASK_H_
@@ -14,18 +15,7 @@
 #include <stdint.h>
 #include <xdc/std.h>
 
-
-/*! \fn UARTFxn
- *  \brief Execute UART Task
- *
- *
- *   \param arg0 void
- *   \param arg1 void
- *
- */
-void UARTFxn(UArg arg0, UArg arg1);
-
-/*! \fn setup_UART_Task
+/** \fn setup_UART_Task
  *  \brief Setup UART task
  *
  *  Setup UART task

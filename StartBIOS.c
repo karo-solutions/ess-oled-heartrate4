@@ -3,7 +3,6 @@
  */
 #include <stdbool.h>
 #include <stdint.h>
-//#include <inc/hw_memmap.h>
 
 /* XDCtools Header files */
 #include <xdc/std.h>
@@ -14,21 +13,12 @@
 
 /* BIOS Header files */
 #include <ti/sysbios/BIOS.h>
-//#include <ti/sysbios/knl/Task.h>
 
-/* Currently unused RTOS headers that are needed
- * for advanced features like IPC. */
-//#include <ti/sysbios/knl/Semaphore.h>
+/* TI-RTOS Header files */
 #include <ti/sysbios/knl/Mailbox.h>
-//#include <ti/sysbios/knl/Event.h>
-//#include <ti/sysbios/hal/Timer.h>
 
 /* Driverlib headers */
-//#include <driverlib/gpio.h>
 #include <driverlib/sysctl.h>
-//#include <driverlib/pin_map.h>
-//#include <driverlib/i2c.h>
-//#include <driverlib/ssi.h>
 
 /* Board Header files */
 #include <Board.h>
@@ -69,13 +59,9 @@ int main(void)
     setup_UART_Task((UArg) mbox_uart_out, (UArg) mbox_uart_in);
     setup_OLED_Task((UArg) mbox_output,(UArg) ui32SysClock);
 
-    System_printf("Created UART Task\n");
-
-    /* SysMin will only print to the console upon calling flush or exit */
     System_printf("Start BIOS\n");
     System_flush();
 
-    /* Start BIOS */
     BIOS_start();
 }
 
@@ -88,22 +74,16 @@ void initMailboxes(void)
     mbox_input = Mailbox_create(sizeof(struct mbox_data), 2, &mailboxParams, &eb);
     if (mbox_input == NULL)
         System_abort("Mailbox create failed");
-    System_printf("Created MailBox mbox_input\n");
 
     mbox_output = Mailbox_create(sizeof(struct mbox_data), 2, &mailboxParams, &eb);
     if (mbox_input == NULL)
         System_abort("Mailbox create failed");
-    System_printf("Created MailBox mbox_output\n");
-
 
     mbox_uart_out = Mailbox_create(sizeof(struct mbox_data), 2, &mailboxParams, &eb);
     if (mbox_input == NULL)
         System_abort("Mailbox create failed");
-    System_printf("Created MailBox mbox_uart_out\n");
-
 
     mbox_uart_in = Mailbox_create(sizeof(struct mbox_uart_in_data), 2, &mailboxParams, &eb);
     if (mbox_input == NULL)
         System_abort("Mailbox create failed");
-    System_printf("Created MailBox mbox_uart_in\n");
 }

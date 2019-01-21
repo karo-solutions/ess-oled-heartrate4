@@ -1,13 +1,12 @@
 /*
  *  ======== UART_Task.c ========
- *  Author: Robert
+ *  Author: Robert Hofmann
  */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <inc/hw_memmap.h>
-//#include <math.h>
 
 /* XDCtools Header files */
 #include <xdc/std.h>
@@ -34,21 +33,14 @@
 #include <EK_TM4C1294XL.h>
 
 /* Application headers */
-//#include <UART_Task.h>
 #include <MBox_common.h>
 
-
-/*
- *  ======== UART  ========
- *  Echo Characters recieved and show reception on Port N Led 0
- */
 void UARTFxn(UArg arg0, UArg arg1)
 {
     Mailbox_Handle mbox_uart_out = (Mailbox_Handle) arg0;
     Mailbox_Handle mbox_uart_in = (Mailbox_Handle) arg1;
     struct mbox_data mbox_data;
     struct mbox_uart_in_data mbox_uart_in_data;
-
 
     UART_Handle uart;
     UART_Params uartParams;
@@ -66,13 +58,14 @@ void UARTFxn(UArg arg0, UArg arg1)
     const char fakeDataPrompt[] = "Enter Fake Data!\r\n";
     const char dataSentPrompt[] = "Fake Data sent!\r\n";
 
-    /* Create a UART with data processing off. */
+    System_printf("UART_Task created!\n");
+    System_flush();
+
     UART_Params_init(&uartParams);
     uartParams.writeDataMode = UART_DATA_TEXT;
     uartParams.readDataMode = UART_DATA_TEXT;
     uartParams.readReturnMode = UART_RETURN_NEWLINE;
     uartParams.readEcho = UART_ECHO_ON;
-    //uartParams.readMode = UART_MODE_BLOCKING;
     uartParams.baudRate = 9600;
     uart = UART_open(Board_UART0, &uartParams);
 
@@ -80,17 +73,15 @@ void UARTFxn(UArg arg0, UArg arg1)
         System_abort("Error opening the UART");
     }
 
-
-    /* Loop forever echoing */
     while (1) {
         UART_write(uart, echoPrompt, sizeof(echoPrompt));
 
-        UART_read(uart, &buffer, 64);
+        UART_read(uart, &buffer, 100);
         entry = strtol(buffer,&ptr,10);
         switch(entry) {
         case 1 :
             UART_write(uart, countPrompt, sizeof(countPrompt));
-            UART_read(uart, &buffer, 64);
+            UART_read(uart, &buffer, 100);
             entry = strtol(buffer,&ptr,10);
             mbox_uart_in_data.mode = 1;
             mbox_uart_in_data.messagecount = entry;
@@ -105,7 +96,7 @@ void UARTFxn(UArg arg0, UArg arg1)
         case 2:
 
             UART_write(uart, countPrompt, sizeof(countPrompt));
-            UART_read(uart, &buffer, 64);
+            UART_read(uart, &buffer, 100);
             entry = strtol(buffer,&ptr,10);
             if (entry == 0){
                 UART_write(uart, errorPrompt, sizeof(errorPrompt));
@@ -118,13 +109,13 @@ void UARTFxn(UArg arg0, UArg arg1)
             for (i = 0; i < entry; ++i ){
                 UART_write(uart, fakeDataPrompt, sizeof(fakeDataPrompt));
                 UART_write(uart, tempPrompt, sizeof(tempPrompt));
-                UART_read(uart, &buffer, 64);
+                UART_read(uart, &buffer, 100);
                 temp = strtol(buffer,&ptr,10);
                 UART_write(uart, heartratePrompt, sizeof(heartratePrompt));
-                UART_read(uart, &buffer, 64);
+                UART_read(uart, &buffer, 100);
                 heartrate = strtol(buffer,&ptr,10);
                 UART_write(uart, spoPrompt, sizeof(spoPrompt));
-                UART_read(uart, &buffer, 64);
+                UART_read(uart, &buffer, 100);
                 spo = strtol(buffer,&ptr,10);
 
                 if(temp == 0 || heartrate == 0 || spo == 0){
@@ -147,7 +138,6 @@ void UARTFxn(UArg arg0, UArg arg1)
         }
 
         GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 1);
-        //UART_write(uart, &input, 1); // Remove this line to stop echoing!
         Task_sleep(5);
         GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0);
     }
