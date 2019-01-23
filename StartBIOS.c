@@ -57,7 +57,7 @@ int main(void)
     setup_Broker_Task(&broker_mboxes);
     setup_HeartRate_Task((UArg) mbox_input);
     setup_UART_Task((UArg) mbox_uart_out, (UArg) mbox_uart_in);
-    setup_OLED_Task((UArg) mbox_output,(UArg) ui32SysClock);
+    setup_OLED_Task((UArg) mbox_output);
 
     System_printf("Start BIOS\n");
     System_flush();

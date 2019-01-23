@@ -472,7 +472,7 @@ void oled_Fxn(UArg arg0)
  * @param arg0
  * @param ui32SysClock
  */
-int setup_OLED_Task(UArg mailbox_output, UArg ui32SysClock)
+int setup_OLED_Task(UArg mailbox_output)
 {
     //RST
     GPIOPinTypeGPIOOutput(RST_PORT, RST_PIN);
