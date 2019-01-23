@@ -150,7 +150,7 @@ void ownSpiInit()
  *
  *  writes data to the SPI bus.
  *
- *  \param uint16_t data data to write to the SPI bus
+ *  \param uint16_t byte data to write to the SPI bus
  */
 void SPI_write(uint16_t byte)
 {
@@ -197,9 +197,9 @@ void oled_command(uint8_t cmd, uint8_t data)
  *  \brief sends data to write
  *
  *  Function sends data to write via SPI to the Oled Display
- *  the function awaits data in form of a bitstream?
+ *  the function awaits data in form of a bitstream
  *
- *  \param uint16_t data the data that is sent to the display
+ *  \param uint16_t data_value the data that is sent to the display
  */
 void oled_data(uint16_t data_value)
 {
@@ -327,7 +327,6 @@ void oled_MemorySize(char X1, char X2, char Y1, char Y2)
  *
  *  This function provides the background for the Oled Display.
  *
- *  \param uint16_t data the data that is sent to the display
  */
 void oled_Background()
 {
@@ -384,7 +383,6 @@ void oled_output(uint8_t start_x, uint8_t start_y, uint8_t font_size_x,
  *  This function prints the given parameters to the display.
  *
  *  \param UArg arg0
- *  \param UArg arg1
  */
 void oled_Fxn(UArg arg0)
 {
@@ -476,12 +474,6 @@ void oled_Fxn(UArg arg0)
  */
 int setup_OLED_Task(UArg mailbox_output, UArg ui32SysClock)
 {
-    SSIClockSourceSet(SSI2_BASE, SSI_CLOCK_SYSTEM);
-    SSIConfigSetExpClk(SSI2_BASE, (uint32_t) ui32SysClock, SSI_FRF_MOTO_MODE_0,
-    SSI_MODE_MASTER,
-                       60 * 1000 * 1000, 16);
-    SSIEnable(SSI2_BASE);
-
     //RST
     GPIOPinTypeGPIOOutput(RST_PORT, RST_PIN);
     //CS
