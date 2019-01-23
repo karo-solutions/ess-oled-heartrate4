@@ -99,7 +99,7 @@ void Isr(uint32_t index)
     clockCount++;
 }*/
 
-void bitSet(uint8_t addr, uint8_t mask, uint8_t value)
+static void bitSet(uint8_t addr, uint8_t mask, uint8_t value)
 {
     i2c.readCount = 1;
     i2c.writeCount = 1;
@@ -118,7 +118,7 @@ void bitSet(uint8_t addr, uint8_t mask, uint8_t value)
 
 }
 
-void clearFIFO(){
+static void clearFIFO(){
     writeBuffer[0] = FIFO_WR_PTR;
     writeBuffer[1] = 0;
     i2c.writeCount = 2;
@@ -144,7 +144,7 @@ void clearFIFO(){
 }
 
 
-void HR4_reset()
+static void HR4_reset()
 {
     bitSet(MODE, RESET_MASK, RESET);
     uint8_t response;
@@ -164,7 +164,7 @@ void HR4_reset()
     while ((response & RESET) != 0);
 }
 
-void resetInterruptStatus(){
+static void resetInterruptStatus(){
     i2c.readCount = 1;
     i2c.writeCount = 1;
     writeBuffer[0] = INT_STATUS1;

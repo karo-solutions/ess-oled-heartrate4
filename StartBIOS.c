@@ -32,7 +32,7 @@
 #include <UART_Task.h>
 #include <MBox_common.h>
 
-void initMailboxes(void);
+static void initMailboxes(void);
 
 //Mailbox Handler
 static Mailbox_Handle mbox_input;
@@ -65,7 +65,7 @@ int main(void)
     BIOS_start();
 }
 
-void initMailboxes(void)
+static void initMailboxes(void)
 {
     Error_Block eb;
     Mailbox_Params mailboxParams;

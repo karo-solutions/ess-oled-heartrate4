@@ -35,7 +35,7 @@
 /* Application headers */
 #include <MBox_common.h>
 
-void UARTFxn(UArg arg0, UArg arg1)
+static void UARTFxn(UArg arg0, UArg arg1)
 {
     Mailbox_Handle mbox_uart_out = (Mailbox_Handle) arg0;
     Mailbox_Handle mbox_uart_in = (Mailbox_Handle) arg1;

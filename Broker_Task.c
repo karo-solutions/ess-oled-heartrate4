@@ -25,7 +25,7 @@
 /* Application headers */
 #include <MBox_common.h>
 
-void BrokerFxn(UArg arg0, UArg arg1){
+static void BrokerFxn(UArg arg0, UArg arg1){
 
     struct mbox_data mbox_data;
     struct mbox_uart_in_data mbox_uart_in_data;
