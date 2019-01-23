@@ -135,7 +135,7 @@ void ownSpiInit()
     spiParams.transferMode = SPI_MODE_BLOCKING;
     spiParams.transferCallbackFxn = NULL;
     spiParams.frameFormat = SPI_POL1_PHA1;    //Polarität und Phasenverschiebung
-    spiParams.bitRate = 1000000;
+    spiParams.bitRate = 1000000; // lt. Datenblatt max 5 MHz = 200 Nanosekunden
     spiParams.dataSize = 16;
 
     masterSpi = SPI_open(Board_SPI0, &spiParams);
